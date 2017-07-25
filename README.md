@@ -13,6 +13,8 @@
   
 * loose mode
 
+* strict mode
+
 
 ### Usage:
 include securephp.php of SecurePHP library.
