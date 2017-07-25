@@ -33,7 +33,7 @@ If you want to install with composer,
 }
 ```
 
-and require autoload.php and execute method.
+and require autoload.php and getInstance() method.
 
 ```php
 require('vendor/autoload.php');
