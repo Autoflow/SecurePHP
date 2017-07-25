@@ -6,15 +6,17 @@
   - send to users
   - send to cc
   
-* treat E_NOTICE's as E_ERROR's
-  - no more undefined variables
-  - no more Array to String conversion 
+* treat E_NOTICE's as E_ERROR's (strict mode)
+  - catch type conversion errors
+  - catch undefined variables, indexes and offsets
   - […]
+  
+* loose mode
 
 
 ### Usage:
-```php
 include securephp.php of SecurePHP library.
+```php
 require_once('vendor/autoflow/securephp/secure.php');
 ```
 
