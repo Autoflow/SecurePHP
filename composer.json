@@ -1,26 +1,26 @@
 {
   "name": "autoflow/securephp",
-  "description": "PHP error mailer - replacement for exception-, error- and shutdown-handler",
+  "description": "PHP error mailer and replacement for error-, exception- and shutdown-handler",
   "require": {
     "php": "^5.3.3"
   },
   "keywords": [
-      "error",
-      "mailer",
-      "log",
-      "error",
-      "exception",
-      "shutdown",
-      "handler"
-    ],
-    "homepage": "https://github.com/Autoflow/SecurePHP",
-    "type": "library",
-    "license": "MIT",
-    "authors": [
-      {
-        "name": "Alexander Münch",
-        "email": "alex@autoflow.org",
-        "homepage": "http://www.autoflow.org"
-      }
-    ]
+    "error",
+    "mailer",
+    "log",
+    "error",
+    "exception",
+    "shutdown",
+    "handler"
+  ],
+  "homepage": "https://github.com/Autoflow/SecurePHP",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Alexander Münch",
+      "email": "alex@autoflow.org",
+      "homepage": "http://www.autoflow.org"
+    }
+  ]
 }
