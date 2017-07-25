@@ -2,9 +2,9 @@
   "name": "autoflow/securephp",
   "description": "PHP Error Mailer, replacement for exception-, error- and shutdown-handler",
   "require": {
-    "php": "^5.3.3",
-    "another-vendor/package": "2.*",
-    "keywords": [
+    "php": "^5.3.3"
+  },
+  "keywords": [
       "error",
       "mailer",
       "log",
@@ -22,5 +22,4 @@
         "homepage": "http://www.autoflow.org"
       }
     ]
-  }
 }
