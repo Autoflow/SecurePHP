@@ -22,5 +22,10 @@
       "email": "alex@autoflow.org",
       "homepage": "http://www.autoflow.org"
     }
-  ]
+  ],
+  "extra": {
+    "branch-alias": {
+      "dev-master": "2.0.x-dev"
+    }
+  }
 }
