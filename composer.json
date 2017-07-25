@@ -10,7 +10,8 @@
       "log",
       "error",
       "exception",
-      "shutdown"
+      "shutdown",
+      "handler"
     ],
     "homepage": "https://github.com/Autoflow/SecurePHP",
     "type": "library",
