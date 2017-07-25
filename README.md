@@ -5,12 +5,18 @@
   - send to admin
   - send to users
   - send to cc
+  
+* treat E_NOTICE's as E_ERROR's
+  - no more undefined variables
+  - no more Array to String conversion 
+  - […]
 
 
-### Usage: 
+### Usage:
+```php
 include securephp.php of SecurePHP library.
 require_once('vendor/autoflow/securephp/secure.php');
-
+```
 
 ### Composer
 If you want to install with composer,
@@ -29,5 +35,5 @@ and require autoload.php and execute method.
 
 ```php
 require('vendor/autoload.php');
-SECUREPHP\BOOTSTRAP::getInstance()
+AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
 ```
