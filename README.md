@@ -1,4 +1,4 @@
-## SecurePHP - error mailer and replacement for error-, exception- and shutdown handler.
+## PHP error mailer and replacement for error-, exception- and shutdown handler.
 
 
 * send error messages to email inboxes
