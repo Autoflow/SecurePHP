@@ -17,6 +17,7 @@
 include securephp.php of SecurePHP library.
 ```php
 require_once('vendor/autoflow/securephp/secure.php');
+$mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
 ```
 
 ### Composer
@@ -24,10 +25,7 @@ If you want to install with composer,
 ```json
 {
 	"require": {
-		"autoflow/securephp": "dev-master"
-	},
-	"autoload": {
-		"files": ["vendor/autoflow/securephp/secure.php"]
+		"autoflow/securephp": "^2.0.0"
 	}
 }
 ```
@@ -36,5 +34,5 @@ and require autoload.php and getInstance() method.
 
 ```php
 require('vendor/autoload.php');
-AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
+$mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
 ```
