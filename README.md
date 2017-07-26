@@ -3,8 +3,8 @@
 ### Delivers:
 
 * predefined error reports based on exceptions
-  - reports for config errors
-  - error ticket reports
+  - error tickets
+  - [config errors](doc/configerror.md)
   - info & notice reports
   - init error reports
   - success reports
@@ -38,9 +38,9 @@
 * user defined shutdown function
   - set your own shutdown function
 
-## Usage:
+## Usage
 
-include securephp.php and get a new instance ..
+include secure.php in your project and get a fresh instance ..
 ```php
 require_once('vendor/autoflow/securephp/secure.php');
 $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
