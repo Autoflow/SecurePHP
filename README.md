@@ -33,15 +33,15 @@
 * user defined shutdown function
   - set your own shutdown function
 
-### Usage:
+## Usage:
 
-include securephp.php and init ..
+include securephp.php and get a new instance ..
 ```php
 require_once('vendor/autoflow/securephp/secure.php');
 $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
 ```
 
-## Composer
+### Composer
 
 If you want to install with composer,
 ```json
@@ -53,7 +53,7 @@ If you want to install with composer,
 }
 ```
 
-and require autoload.php and getInstance() method.
+and require autoload.php and get a new instance ..
 
 ```php
 require('vendor/autoload.php');
