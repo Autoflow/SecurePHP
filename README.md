@@ -27,6 +27,12 @@
 * loose mode
   - handle errors as PHP does
 
+* EOF detection
+  - get informed when PHP doesn't reach the end of file
+
+* user defined shutdown function
+  - set your own shutdown function
+
 ### Usage:
 include securephp.php of SecurePHP library.
 ```php
