@@ -23,6 +23,11 @@
       "homepage": "http://www.autoflow.org"
     }
   ],
+  "extra": {
+    "branch-alias": {
+      "dev-master": "2.0.x-dev"
+    }
+  },
   "autoload": {
 		"files": ["vendor/autoflow/securephp/secure.php"]
 	}
