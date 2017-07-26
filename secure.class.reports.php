@@ -122,6 +122,10 @@ namespace
                 {
                 $message .= '* '.$e->description.' in ' . $e->getFile() . ', Zeile ' . $e->getLine() . SECUREPHP_LINE_BREAK;
                 }
+            else
+                {
+                $message .= '* '.get_class($e).' in ' . $e->getFile() . ', Zeile ' . $e->getLine() . SECUREPHP_LINE_BREAK;
+                }
 
             $message .= '* Beschreibung: ' . $e->getMessage() . SECUREPHP_LINE_BREAK;
 
@@ -152,6 +156,32 @@ namespace
                 $message .= '* ' . SECUREPHP_LINE_BREAK;
                 foreach ($e->get_attachments() AS $attachement)
                     $message .= '*'.SECUREPHP_LINE_BREAK."* " . ++$i . ') ' . get_class($attachement) . SECUREPHP_LINE_BREAK . (string) $attachement . "";
+                }
+
+            if(is_a($e, 'ConfigError') AND count($e->config_params))
+                {
+
+                $message .= '*' . SECUREPHP_LINE_BREAK;
+                $message .= '* Hinweise zur Konfiguration:' . SECUREPHP_LINE_BREAK;
+                $message .= '* Möglicherweise sind die Konfigurationsparameter nicht aktuell.' . SECUREPHP_LINE_BREAK;
+                $message .= '*' . SECUREPHP_LINE_BREAK;
+                $message .= '* Konfigurationsdatei: ' . ($e->config_file?:' nicht vorhanden') . SECUREPHP_LINE_BREAK;
+                $message .= '*' . SECUREPHP_LINE_BREAK;
+                $message .= '* aktuelle Konfigurationswerte: ';
+                if( count($e->config_params) > 0 )
+                    {
+                    $count = 1;
+                    $message .= SECUREPHP_LINE_BREAK;
+                    foreach($e->config_params AS $name => $value)
+                        {
+                        $message .= '* '. $count .') '.$name .': '.(string) $value . SECUREPHP_LINE_BREAK;
+                        $count++;
+                        }
+                    }
+                else
+                    {
+                    $message .= 'nicht vorhanden' . SECUREPHP_LINE_BREAK;
+                    }
                 }
 
             if ($e->getPrevious())
