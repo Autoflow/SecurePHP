@@ -180,7 +180,7 @@ namespace
                 }
             elseif(false == defined('SECUREPHP'))
                 {
-                throw new Exception('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' steht nicht zur Verfügung um diesen Fehlerbericht zu versenden.', NULL, $this);
+                throw new \AUTOFLOW\SECUREPHP\E_CONFIG('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' steht nicht zur Verfügung um diesen Fehlerbericht zu versenden.', NULL, $this);
                 }
             elseif(false == \AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance())
                 {
