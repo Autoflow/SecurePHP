@@ -18,6 +18,7 @@
 include securephp.php of SecurePHP library.
 ```php
 require_once('vendor/autoflow/securephp/secure.php');
+$mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
 ```
 
 ### Composer
