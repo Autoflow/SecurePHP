@@ -29,6 +29,6 @@
     }
   },
   "autoload": {
-		"files": ["vendor/autoflow/securephp/secure.php"]
-	}
+    "files": ["vendor/autoflow/securephp/secure.php"]
+  }
 }
