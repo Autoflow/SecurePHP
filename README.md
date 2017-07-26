@@ -28,9 +28,10 @@ $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
 If you want to install with composer,
 ```json
 {
-	"require": {
-		"autoflow/securephp": "^2.0.0"
-	}
+"require": 
+  {
+  "autoflow/securephp": "^2.0.0"
+  }
 }
 ```
 
