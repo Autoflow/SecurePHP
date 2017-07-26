@@ -22,5 +22,8 @@
       "email": "alex@autoflow.org",
       "homepage": "http://www.autoflow.org"
     }
-  ]
+  ],
+  "autoload": {
+		"files": ["vendor/autoflow/securephp/secure.php"]
+	}
 }
