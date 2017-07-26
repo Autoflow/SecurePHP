@@ -1,4 +1,4 @@
-## PHP error mailer and replacement for error-, exception- and shutdown handler. [https://Autoflow.github.io/SecurePHP](https://autoflow.github.io/securephp)
+## SecurePHP - error mailer and runtime environment
 
 * predefined error reports
   - error tickets
