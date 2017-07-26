@@ -1,7 +1,16 @@
 ## PHP error mailer and replacement for error-, exception- and shutdown handler.
 
+* predefined error reports
+  - error tickets
+  - config errors
+  - info & notice reports
+  - init errors
+  - success reports
+  - timer alerts
+  - transaction & transition errors
+  - uncaught exception errors
 
-* send error messages to email inboxes
+* send errors to email inboxes
   - send to admin
   - send to users
   - send to cc
@@ -11,11 +20,12 @@
   - catch undefined variables, indexes and offsets
   - […]
   
-* loose mode
-
 * catch recurring errors
   - inform about repetitives errors (ie. every 30 minutes)
   - optimized for cronjobs
+
+* loose mode
+  - handle errors as PHP does
 
 ### Usage:
 include securephp.php of SecurePHP library.
