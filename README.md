@@ -1,5 +1,7 @@
 ## SecurePHP - error mailer and runtime sensitizing
 
+### Delivers:
+
 * predefined error reports based on exceptions
   - reports for config errors
   - error ticket reports
