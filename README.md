@@ -34,13 +34,15 @@
   - set your own shutdown function
 
 ### Usage:
-include securephp.php of SecurePHP library.
+
+include securephp.php and init ..
 ```php
 require_once('vendor/autoflow/securephp/secure.php');
 $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
 ```
 
-### Composer
+## Composer
+
 If you want to install with composer,
 ```json
 {
