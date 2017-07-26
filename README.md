@@ -1,4 +1,4 @@
-## SecurePHP - error mailer and runtime environment
+## SecurePHP - error mailer and runtime sensitizing
 
 * predefined error reports
   - error tickets
