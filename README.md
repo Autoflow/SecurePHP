@@ -13,6 +13,10 @@
   
 * loose mode
 
+* catch recurring errors
+  - inform about repetitives errors (ie. every 30 minutes)
+  - optimized for cronjobs
+
 ### Usage:
 include securephp.php of SecurePHP library.
 ```php
