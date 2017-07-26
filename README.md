@@ -1,14 +1,17 @@
 ## SecurePHP - error mailer and runtime sensitizing
 
-* predefined error reports
-  - error tickets
-  - config errors
+* predefined error reports based on exceptions
+  - reports for config errors
+  - error ticket reports
   - info & notice reports
-  - init errors
+  - init error reports
   - success reports
   - timer alerts
-  - transaction & transition errors
-  - uncaught exception errors
+  - transaction & transition reports
+  - uncaught exception reports
+  - [..]
+  - easily sent by email, to STDERR or to log
+  
 
 * send errors to email inboxes
   - send to admin
