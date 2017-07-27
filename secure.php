@@ -1322,7 +1322,7 @@ namespace AUTOFLOW\SECUREPHP
                 // Error handling (strict or loose)
 
                 $error = new \PhpError($this->get_php_error($error_level)[0] . ' ' . $error_message, NULL, $error_level, $error_file, $error_line);
-                $error->set_status('Das Skript wird ' . (!error_reporting() ? 'mittels @ fortgeführt' : (SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode() ? 'abgebrochen (Strict-Mode).' : 'nicht abgebrochen (Loose-Mode)')));
+                $error->set_state('Das Skript wird ' . (!error_reporting() ? 'mittels @ fortgeführt' : (SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode() ? 'abgebrochen (Strict-Mode).' : 'nicht abgebrochen (Loose-Mode)')));
 
                 // Supressed by @
                 if ((error_reporting() & $error_level)) switch ($error_level)
@@ -1352,7 +1352,7 @@ namespace AUTOFLOW\SECUREPHP
                             || preg_match('/simplexml_load_file().*/', $error_message)
                         )
                             {
-                            $error->set_status('Das Skript wurde durch eine Sonderbehandlung nicht abgebrochen!');
+                            $error->set_state('Das Skript wurde durch eine Sonderbehandlung nicht abgebrochen!');
                             $error->send_to('log');
                             $error->raise();
                             return true;
@@ -1497,13 +1497,15 @@ namespace AUTOFLOW\SECUREPHP
                 case E_COMPILE_WARNING:
                 case E_PARSE:
                 case E_STRICT;
-                    $error = new \ShutdownError('Es ist ein Laufzeitfehler vom Typ ' . $this->get_php_error($lasterror['type'])[0] . ' aufgetreten.', 0,$lasterror['type'], $lasterror['file'], $lasterror['line']);
-                    $error->set_note($lasterror['message']);
+                    $error = new \ShutdownError($lasterror['message'], 0, $lasterror['type'], $lasterror['file'], $lasterror['line']);
+                    $error->set_note($this->get_php_error($lasterror['type'])[0]);
+                    $error->set_state(CONFIG::getInstance()->_('script aborted before'));
                     $error->raise();
                     break;
                 default:
-                    $error = new \ShutdownError('Es ist ein Laufzeitfehler vom Typ ' . $this->get_php_error($lasterror['type'])[0] . '  aufgetreten.', 0, $lasterror['type'], $lasterror['file'], $lasterror['line']);
-                    $error->set_note($lasterror['message']);
+                    $error = new \ShutdownError($lasterror['message'], 0, $lasterror['type'], $lasterror['file'], $lasterror['line']);
+                    $error->set_note($this->get_php_error($lasterror['type'])[0]);
+                    $error->set_state(CONFIG::getInstance()->_('script aborted before'));
                     $error->raise();
                     break;
                 }

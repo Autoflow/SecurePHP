@@ -43,11 +43,11 @@ namespace
 
 
         /**
-         * @todo change to protected, @see set_status
+         * @todo change to protected, @see set_state
          * Statusmeldung.
          * @var string
          */
-		public $status = '';
+		public $state = '';
 
         /**
          * @var string
@@ -328,12 +328,12 @@ namespace
             }
 
         /**
-         * @param string $status
+         * @param string $state
          * @return bool
          */
-        final public function set_status($status)
+        final public function set_state($state)
             {
-            $this->status = $status;
+            $this->state = $state;
             return true;
             }
 
@@ -342,7 +342,7 @@ namespace
          */
         final protected function get_status()
             {
-            return $this->status;
+            return $this->state;
             }
 
         /**
@@ -725,7 +725,7 @@ namespace
             {
             parent::__construct($message, NULL, $previous);
             $this->application = SECUREPHP\PROTECT::getInstance()->get_app();
-            $this->status = $status;
+            $this->state = $status;
             }
 
         }
@@ -926,7 +926,7 @@ namespace
         /**
          * @var string
          */
-        public $description = "Verabeitungsbericht";
+        public $description = "working range";
 
         /**
          * @var bool
@@ -1005,7 +1005,7 @@ namespace
         /**
          * @var string
          */
-        public $description = 'Hinweis';
+        public $description = 'notice';
 
         /**
          * @var bool
@@ -1033,7 +1033,7 @@ namespace
         /**
          * @var string
          */
-		public $description    = 'Konfigurationsfehler';
+		public $description    = 'config error';
 
         /**
          * @var bool
@@ -1115,7 +1115,7 @@ namespace
         /**
          * @var string
          */
-		public $description = 'Start- oder Initialisierungsfehler';
+		public $description = 'init error';
 
         /**
          * @var bool
@@ -1140,7 +1140,7 @@ namespace
         /**
          * @var string
          */
-        public $description = 'Übergangsfehler';
+        public $description = 'transition error';
 
         /**
          * @var bool
@@ -1159,7 +1159,7 @@ namespace
         /**
          * @var string
          */
-        public $description = 'Transaktionsfehler';
+        public $description = 'transaction error';
 
         /**
          * @var bool
@@ -1180,7 +1180,7 @@ namespace
         /**
          * @var string
          */
-		public $description = 'Objektfehler';
+		public $description = 'class error';
 
         /**
          * @var bool
@@ -1199,7 +1199,7 @@ namespace
         /**
          * @var string
          */
-		public $description = 'Erinnerung an weiterhin bestehenden Fehler';
+		public $description = 'reminder alert';
 
         /**
          * @var bool
@@ -1217,7 +1217,7 @@ namespace
         /**
          * @var string
          */
-        public $description = 'Unbehandelte Exception';
+        public $description = 'uncaught exception';
 
         /**
          * @var bool
@@ -1235,7 +1235,7 @@ namespace
         /**
          * @var string
          */
-        public $description = "Ablauffehler";
+        public $description = "eof error";
 
         /**
          * @var bool
@@ -1296,7 +1296,7 @@ namespace
         /**
          * @var string
          */
-		public $description = "Shutdown-Fehler";
+		public $description = "shutdown error";
 
         /**
          * @var bool
