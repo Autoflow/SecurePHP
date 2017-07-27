@@ -1,4 +1,4 @@
-## Example usage within cronjobs:
+## Example usage within cronjobs starting every 5 minutes:
 
 ```php
 
@@ -21,14 +21,14 @@ try
     $mysecure->config->timeout(5 * 60);
 
     // focus and catch recurring errors every 30 minutes and
-    // send them by ([TimerAlert](doc/timeralert.md)) to
-    // admins email inbox.
+    // send them by TimerAlert (reminder) to admins email inbox.
     $mysecure->config->reminder(30 * 60);
 
      // try to create pdo object
      $db = new PDO(PDO_DSN, PDO_USER, PDO_PASSWORD);
 
     }
+
 catch(PDOException $e)
 
     {
@@ -37,9 +37,10 @@ catch(PDOException $e)
     $mysecure->eof();
 
     // create error report
-    $report = new ConfigError("database error","connection to database failed.", $e);
+    $report = new ConfigError("connection to database failed", "script terminated on database error", $e);
 
-    // error report will now be send every 30 minutes only
+    // ConfigError is now blocked.
+    // Reminder will be send every 30 minutes
     // if error raises in meantime again.
     $report->raise();
 
@@ -66,10 +67,10 @@ catch(PDOException $e)
 *
 * 1) ErrorTicket
 *
-* Fehlerticket within C:\Bitnami\apache2\htdocs\GitHub\SecurePHP\2.0\tests\testcase.php, line 17
-* description: Database error
+* error ticket within C:\Bitnami\apache2\htdocs\GitHub\SecurePHP\2.0\tests\testcase.php, line 17
+* description: connection to database failed
 *
-* current state: database not available
+* current state: script terminated on database error
 *
 */
 ```
