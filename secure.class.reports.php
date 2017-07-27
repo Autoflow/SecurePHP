@@ -1245,7 +1245,7 @@ namespace
         /**
          * @var bool
          */
-        protected $flag_details = true;
+        protected $flag_details = false;
 		}
 
     /**
