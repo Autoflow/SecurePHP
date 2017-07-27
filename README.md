@@ -3,7 +3,7 @@
 ### Delivers:
 
 * predefined error reports based on exceptions
-  - error tickets
+  - [error tickets](doc/errorticket.md)
   - [config errors](doc/configerror.md)
   - info & notice reports
   - init error reports
