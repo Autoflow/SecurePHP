@@ -20,7 +20,7 @@ try
     // cronjob starts every 5 minutes
     $mysecure->config->timeout(5 * 60);
 
-    // catch recurring errors every 30 minutes only and
+    // focus and catch recurring errors every 30 minutes and
     // send them by ([TimerAlert](doc/timeralert.md)) to
     // admins email inbox.
     $mysecure->config->reminder(30 * 60);
@@ -33,10 +33,14 @@ catch(PDOException $e)
 
     {
 
+    // prevent from eof errors
+    $mysecure->eof();
+
     // create error report
     $report = new ConfigError("database error","connection to database failed.", $e);
 
-    // error report will now be send every 30 minutes
+    // error report will now be send every 30 minutes only
+    // if error raises in meantime again.
     $report->raise();
 
     }
