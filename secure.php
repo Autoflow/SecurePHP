@@ -2816,7 +2816,7 @@ namespace AUTOFLOW\SECUREPHP
                 {
                 while($row = $result->fetchArray())
                     {
-                    $this->data[$row['key']] = ARRAY($row['lasttime'],$row['attempts'],$row['warning'],$row['file'],$row['line'],$row['timeout'],$row['reminder'],$row['message']);
+                    $this->data[$row['id']] = ARRAY($row['lasttime'],$row['attempts'],$row['warning'],$row['file'],$row['line'],$row['timeout'],$row['reminder'],$row['message'],$row['key'],$row['id']);
                     }
                 }
 
@@ -2894,7 +2894,7 @@ namespace AUTOFLOW\SECUREPHP
                 }
 
             // Noch kein Eintrag in DB vorhanden
-            if(empty($this->data) || !array_key_exists($key, $this->data))
+            if(empty($this->data) || !$data = $this->select($key, $file))
                 {
 
                 // Zeitstempel wie folgt
@@ -2906,22 +2906,24 @@ namespace AUTOFLOW\SECUREPHP
                 // [5] = timeout (Speichert den individuellen Timeout) @TODO
                 // [6] = reminder (individueller Reminder) @TODO
                 // [7] = message
+                // [8] = key
+                // [9] = id
 
-                $this->add($key, $starttime, 0, 0, "", "", "", "", $message);
+                $this->add($key, $starttime, 0, 0, $file, $line, $timeout, "", $message);
 
                 return true;
                 }
 
             // Es existiert ein Eintrag.
             // Prüfen ob Wiederholungsfehler oder nicht.
+
             else
                 {
-
-                $data = $this->data[$key];
 
                 $lasttime = $data[0];
                 $attempts = $data[1];
                 $warning = $data[2];
+                $id = $data[9];
 
                 // Der Timeout ist noch nicht abgelaufen.
                 // Es handelt sich um den selben Fehler im selben Prozess.
@@ -2952,9 +2954,9 @@ namespace AUTOFLOW\SECUREPHP
                             $report->params["timeout"]  = $timeout . ' Sekunden';
                             $report->add($e);
 
-                            $this->data[$key][0] = $starttime;
-                            $this->data[$key][1]++;
-                            $this->data[$key][2] = $starttime;
+                            $this->data[$id][0] = $starttime;
+                            $this->data[$id][1]++;
+                            $this->data[$id][2] = $starttime;
                             $this->update();
 
                             return $report;
@@ -2974,9 +2976,9 @@ namespace AUTOFLOW\SECUREPHP
                                 $report->params["timeout"]      = $timeout . ' Sekunden';
                                 $report->add($e);
 
-                                $this->data[$key][0] = $starttime;
-                                $this->data[$key][1]++;
-                                $this->data[$key][2] = $starttime;
+                                $this->data[$id][0] = $starttime;
+                                $this->data[$id][1]++;
+                                $this->data[$id][2] = $starttime;
                                 $this->update();
 
                                 return $report;
@@ -2984,8 +2986,8 @@ namespace AUTOFLOW\SECUREPHP
                             else
                                 {
                                 // Wiederholungsfehler nur verbuchen..
-                                $this->data[$key][0] = $starttime;
-                                $this->data[$key][1]++;
+                                $this->data[$id][0] = $starttime;
+                                $this->data[$id][1]++;
                                 $this->update();
                                 return false;
                                 }
@@ -2995,9 +2997,9 @@ namespace AUTOFLOW\SECUREPHP
                     // Dieser Zustand wird durch clear() hergestellt durch löschen alter Einträge ..
                     elseif($starttime - $lasttime >= $timeout * SECUREPHP_TIMEOUT + 1)
                         {
-                        $this->data[$key][0] = $starttime;
-                        $this->data[$key][1] = 0;
-                        $this->data[$key][2] = 0;
+                        $this->data[$id][0] = $starttime;
+                        $this->data[$id][1] = 0;
+                        $this->data[$id][2] = 0;
                         $this->update();
                         return true;
                         }
@@ -3021,9 +3023,8 @@ namespace AUTOFLOW\SECUREPHP
                 $statement->bindValue(':message', $message);
                 $statement->execute();
 
-                #echo $this->db->lastErrorMsg();
+                return $this->db->lastInsertRowID();
 
-                return true;
                 }
             catch(\Exception $e)
                 {
@@ -3037,9 +3038,9 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function update()
             {
-            foreach($this->data AS $key=>$row)
+            foreach($this->data AS $id=>$row)
                 {
-                $statement = DB::getInstance()->server->prepare("UPDATE timeout SET lasttime = :lasttime, attempts = :attempts, warning = :warning, file = :file, line = :line, timeout = :timeout, reminder = :reminder, message = :message WHERE key = :key");
+                $statement = DB::getInstance()->server->prepare("UPDATE timeout SET lasttime = :lasttime, attempts = :attempts, warning = :warning, file = :file, line = :line, timeout = :timeout, reminder = :reminder, message = :message WHERE id = :id");
 
                 $statement->bindValue(':lasttime', $row[0]);
                 $statement->bindValue(':attempts', $row[1]);
@@ -3049,7 +3050,7 @@ namespace AUTOFLOW\SECUREPHP
                 $statement->bindValue(':timeout', $row[5]);
                 $statement->bindValue(':reminder', $row[6]);
                 $statement->bindValue(':message', $row[7]);
-                $statement->bindValue(':key', $key);
+                $statement->bindValue(':id', $id);
                 $statement->execute();
                 #echo $this->db->lastErrorMsg();
                 }
@@ -3064,26 +3065,42 @@ namespace AUTOFLOW\SECUREPHP
             if(empty($this->data)) return true;
             else
                 {
-                foreach($this->data AS $key=>$value)
+                foreach($this->data AS $id=>$value)
                     {
                     $lasttime = $value[0];
-                    $timeout = $lasttime + ($this->timeout * SECUREPHP_TIMEOUT);
+                    $timeout = $value[5];
+                    $timeout = $lasttime + ($timeout * SECUREPHP_TIMEOUT);
                     if($timeout < BOOTSTRAP::$starttime)
                         {
-                        $_data[] = $key;
+                        $_data[] = $id;
                         }
                     }
                 if(isset($_data))
                     {
-                    foreach($_data AS $key)
+                    foreach($_data AS $id)
                         {
-                        unset($this->data[$key]);
-                        DB::getInstance()->server->exec("DELETE FROM timeout WHERE key = '$key'");
+                        unset($this->data[$id]);
+                        DB::getInstance()->server->exec("DELETE FROM timeout WHERE id = '$id'");
                         return true;
                         }
                     }
                 else return true;
                 }
+            }
+
+        /**
+         * @param string $key
+         * @param string $file
+         * @return array
+         */
+        final protected function select($key, $file)
+            {
+            $a = $this->data;
+            $b = array_map(function($row) use ($key, $file)
+                {
+                if($row[8] == $key AND $row[3] == $file) return $row;
+                }, $a);
+            return array_shift($b);
             }
 
         /**
