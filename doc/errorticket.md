@@ -33,7 +33,7 @@ try {
 *
 * notes: E_NOTICE
 *
-* current state: script will be aborted (Script-Mode)
+* current state: script will be aborted (Strict-Mode)
 *
 * trace:
 * 0 C:\Bitnami\apache2\htdocs\GitHub\SecurePHP\2.0\tests\testcase.php (14) AUTOFLOW\SECUREPHP\PROTECT->error_handler(8, 'Undefined ..', 'C:\Bitnami..', 14, ARRAY)
