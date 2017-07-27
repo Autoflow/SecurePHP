@@ -2006,6 +2006,21 @@ namespace AUTOFLOW\SECUREPHP
             }
 
         /**
+         * @param int $timeout
+         * @return bool
+         * @throws \Exception
+         */
+        final public function reminder($timeout)
+            {
+            if(false == (TIMEOUT::getInstance()->set_reminder($timeout)))
+                {
+                $this->config_error = TIMEOUT::getInstance()->get_error();
+                $this->terminate($this->config_error);
+                }
+            else return true;
+            }
+
+        /**
          * @param string $from
          * @return bool
          */
@@ -2076,7 +2091,6 @@ namespace AUTOFLOW\SECUREPHP
                 }
             else return true;
             }
-
 
 
         /**
@@ -2765,6 +2779,11 @@ namespace AUTOFLOW\SECUREPHP
         private $timeout        = NULL;
 
         /**
+         * @var int|NULL
+         */
+        private $reminder       = NULL;
+
+        /**
          * @var bool|\Exception
          */
         private $error          = false;
@@ -2872,6 +2891,11 @@ namespace AUTOFLOW\SECUREPHP
                 return true;
                 }
 
+            // Reminder festlegen
+            if($reminder = $this->get_reminder());
+            else $reminder = 60 * 30;
+
+
             if(false == $this->clear())
                 {
                 error_log('Fehler beim Löschen der Timer-Db');
@@ -2909,7 +2933,7 @@ namespace AUTOFLOW\SECUREPHP
                 // [8] = key
                 // [9] = id
 
-                $this->add($key, $starttime, 0, 0, $file, $line, $timeout, "", $message);
+                $this->add($key, $starttime, 0, 0, $file, $line, $timeout, $reminder, $message);
 
                 return true;
                 }
@@ -2923,6 +2947,7 @@ namespace AUTOFLOW\SECUREPHP
                 $lasttime = $data[0];
                 $attempts = $data[1];
                 $warning = $data[2];
+                $reminder = $data[6];
                 $id = $data[9];
 
                 // Der Timeout ist noch nicht abgelaufen.
@@ -2965,7 +2990,7 @@ namespace AUTOFLOW\SECUREPHP
                             {
                             // weiterer Wiederholungsfehler
                             // Wenn 30 Minuten vorbei neue Erinnerung ..
-                            if($starttime - $warning > 60 * 30)
+                            if($starttime - $warning > $reminder)
                                 {
                                 $report = new \TimerAlert('Fehlererinnerung', 'Sie werden weiterhin alle 30 Minuten über den bestehenden Wiederholungsfehler informiert');
                                 $report->send_to($e->get_send_to());
@@ -3178,6 +3203,32 @@ namespace AUTOFLOW\SECUREPHP
         final public function get_timeout()
             {
             return $this->timeout;
+            }
+
+        /**
+         * @param int $timeout
+         * @return NULL|int
+         */
+        final public function set_reminder($timeout)
+            {
+            if(!is_int($timeout))
+                {
+                $this->set_error(new \CONFIGERROR('ungültiger Integer-Wert für Reminder übergeben'));
+                return false;
+                }
+            else
+                {
+                $this->reminder = $timeout;
+                return true;
+                }
+            }
+
+        /**
+         * @return int | NULL
+         */
+        final public function get_reminder()
+            {
+            return $this->reminder;
             }
 
         } // final class TIMEOUT
