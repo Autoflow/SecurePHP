@@ -900,7 +900,15 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function get_script_name()
             {
-            return basename(get_included_files()[0]);
+            return basename($this->get_script_path());
+            }
+
+        /**
+         * @return string
+         */
+        final public function get_script_path()
+            {
+            return get_included_files()[0];
             }
 
         /**
@@ -2864,10 +2872,10 @@ namespace AUTOFLOW\SECUREPHP
         final public function check(\Exception $e, $timeout=NULL)
             {
 
-            $starttime = BOOTSTRAP::$starttime;
-            $file = $e->getFile();
-            $line = $e->getLine();
-            $message = $e->getMessage();
+            $message    = $e->getMessage();
+            $starttime  = BOOTSTRAP::$starttime;
+            $file       = BOOTSTRAP::getInstance()->get_script_path();
+            $line       = $e->getLine();
 
             // Wenn ein Fehler in der TIMEOUT-Klasse vorliegt sende keine Emails!
             #if($this->flag_error) return false;
@@ -2933,7 +2941,7 @@ namespace AUTOFLOW\SECUREPHP
                 // [8] = key
                 // [9] = id
 
-                $this->add($key, $starttime, 0, 0, $file, $line, $timeout, $reminder, $message);
+                $this->add($key, $starttime, 0, 0, $file, 0, $timeout, $reminder, $message);
 
                 return true;
                 }
@@ -3126,6 +3134,15 @@ namespace AUTOFLOW\SECUREPHP
                 if($row[8] == $key AND $row[3] == $file) return $row;
                 }, $a);
             return array_shift($b);
+            }
+
+        /**
+         * @param int $sec
+         * @return string
+         */
+        final public function sec2min($sec)
+            {
+            return floor($sec/60)."min:".($sec%60)."secs";
             }
 
         /**
