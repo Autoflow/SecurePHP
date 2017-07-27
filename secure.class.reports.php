@@ -291,7 +291,12 @@ namespace
          */
         final public function get_md5()
             {
-            return md5(serialize($this));
+
+            // Nach adden von reminder funktioniert diese Zeile nicht mehr ..
+            #return md5(serialize($this));
+
+            // neu:
+            return md5(($this->__toString()));
             }
 
         /**
