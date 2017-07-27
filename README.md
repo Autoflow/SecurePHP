@@ -26,18 +26,18 @@
   - catch undefined variables, indexes and offsets
   - […]
   
-* [catch recurring errors](doc/timeout.md)
-  - inform about repetitives errors (ie. every 30 minutes)
+* catch recurring errors](doc/timeout.md)
+  - [inform about repetitives errors](doc/timeout.md) (ie. every 30 minutes)
   - optimized for cronjobs
 
 * loose mode
-  - handle errors as PHP does
+  - [handle errors as PHP does](doc/loose.md)
 
 * EOF detection
-  - get informed when PHP doesn't reach the end of file
+  - [get informed when PHP doesn't reach the end of file](doc/eof.md)
 
 * user defined shutdown function
-  - set your own shutdown function
+  - [set your own shutdown function](doc/shutdown_function.md)
 
 ## Usage
 
