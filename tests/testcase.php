@@ -1,21 +1,30 @@
 <?php
 
-// TODO:
-// 1) Wenn @, dann keine Fehlermeldung über den tatsächlichen Fehler
-// 2) function send for mail merge
-// 3) Trace in Mail
-// 4) Verschiebe mute(), enabled(), disabled() etc. nach Config
 
 include dirname(__FILE__) . '/../secure.php';
 try
     {
 
-    $mysecure = AUTOFLOWSECUREPHP\BOOTSTRAP::getInstance(true, false);
 
-
+    $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance(true, false);
     $mysecure->mute(false);
+
+    $mysecure->config->from('Autoflow<securephp@autoflow.org>');
+    $mysecure->config->admin('alex@autoflow.org');
+    $mysecure->config->user('user@autoflow.org');
+    $mysecure->config->add_cc('cc', 'cc@autoflow.org');
+
+    $ticket = new \ErrorTicket('Database error', 'database not available');
+    $ticket->send_to('admin>user,log');
+    $ticket->raise();
+
+    $ticket = new \Notice('Database update failed today', 'Retry in 30 minutes');
+    $ticket->send_to('cc');
+    $ticket->raise();
+
+die();
+
     #$mysecure->debug(1);
-    #$mysecure->debug(0);
     $mysecure->enabled(1);
 
     $mysecure->config->app('SecurePHP Testsuite');
@@ -41,11 +50,11 @@ try
 
     #$mysecure->end();
     }
-catch(AUTOFLOWSECUREPHP\E_INIT $e)
+catch(AUTOFLOW\SECUREPHP\E_INIT $e)
     {
     echo "INITFEHLER:" . $e;
     }
-catch(AUTOFLOWSECUREPHP\E_CONFIG $e)
+catch(AUTOFLOW\SECUREPHP\E_CONFIG $e)
     {
     echo "KONFIGURATIONSPROBLEM:" . $e;
     }
