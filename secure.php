@@ -1321,8 +1321,9 @@ namespace AUTOFLOW\SECUREPHP
 
                 // Error handling (strict or loose)
 
-                $error = new \PhpError($this->get_php_error($error_level)[0] . ' ' . $error_message, NULL, $error_level, $error_file, $error_line);
-                $error->set_state('Das Skript wird ' . (!error_reporting() ? 'mittels @ fortgeführt' : (SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode() ? 'abgebrochen (Strict-Mode).' : 'nicht abgebrochen (Loose-Mode)')));
+                $error = new \PhpError($error_message, NULL, $error_level, $error_file, $error_line);
+                $error->set_note($this->get_php_error($error_level)[0]);
+                $error->set_state(CONFIG::getInstance()->_('script run') . (!error_reporting() ? CONFIG::getInstance()->_('continued') . '(@)' : (SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode() ? CONFIG::getInstance()->_('terminates') . ' (Strict-Mode).' : CONFIG::getInstance()->_('continues') . ' (Loose-Mode)')));
 
                 // Supressed by @
                 if ((error_reporting() & $error_level)) switch ($error_level)
