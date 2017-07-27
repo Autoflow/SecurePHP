@@ -1955,6 +1955,27 @@ namespace AUTOFLOW\SECUREPHP
 
 
         /**
+         * @param string $token
+         * @param null $lang
+         * @return string
+         */
+        final public function _($token, $lang = null)
+            {
+            global $translation;
+            if(empty($lang)
+                || !array_key_exists($token, $translation)
+                || !array_key_exists($lang, $translation[$token])
+                )
+                {
+                return $token;
+                }
+            else
+                {
+                return $translation[$token][$lang];
+                }
+            }
+
+        /**
          * @param string $name
          * @return bool
          */

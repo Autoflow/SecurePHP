@@ -102,8 +102,8 @@ namespace AUTOFLOW\SECUREPHP
             foreach($tracestack AS $l => $trace)
                 {
                 if(!isset($trace['file'])) $trace['file'] = '(intern) ';
-                if(!isset($trace['line'])) $trace['line'] = ''; else $trace['line'] = "({$trace['line']})";
-                if(!isset($trace['class'])) $trace['class'] = ''; else $trace['class'] = $trace['class'] . '->';
+                if(!isset($trace['line'])) $trace['line'] = ' '; else $trace['line'] = " ({$trace['line']})";
+                if(!isset($trace['class'])) $trace['class'] = ' '; else $trace['class'] = ' ' . $trace['class'] . '->';
                 $params = ARRAY();
                 foreach($trace['args'] AS  $arg)
                     {
@@ -111,7 +111,7 @@ namespace AUTOFLOW\SECUREPHP
                     elseif(is_object($arg)) $params[] = 'Object('.get_class($arg).')';
                     elseif(is_string($arg))
                         {
-                        if(strlen($arg) > 10) $params[] = "'" . substr($arg, 0, 5) . " .. " . substr($arg, -5) ."'";
+                        if(strlen($arg) > 10) $params[] = "'" . substr($arg, 0, 10) . "..'";
                         else $params[] = (string) "'$arg'";
                         }
                     elseif(is_numeric($arg)) $params[] = (int) $arg;

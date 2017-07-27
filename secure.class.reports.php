@@ -22,6 +22,8 @@ namespace
 
 	{
 
+    use AUTOFLOW\SECUREPHP;
+
     /**
      * Version of current reports class.
      */
@@ -66,7 +68,7 @@ namespace
 
         /**
          * @todo change to protected,
-         * @todo @see set_params, @see add_param
+         * @todo @see add_params, @see add_param
          * Weitere benutzerdefinierte Parameter
          * @var array
          */
@@ -108,6 +110,43 @@ namespace
 
         // TRAIT METHODS
 
+
+        /**
+         * @param int|null $timeout
+         * @return void
+         * @throws \Exception
+         */
+        final public function raise($timeout = NULL)
+            {
+
+            if(true == $this->has_raised())
+                {
+                return;
+                }
+            elseif(false == defined('SECUREPHP'))
+                {
+                throw new SECUREPHP\E_CONFIG('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' steht nicht zur Verfügung um diesen Fehlerbericht zu versenden.', NULL, $this);
+                }
+            elseif(false == SECUREPHP\BOOTSTRAP::getInstance())
+                {
+                throw new SECUREPHP\E_INIT('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' ist nicht initialisiert.', NULL, $this);
+                }
+            elseif(true == SECUREPHP\PROTECT::getInstance()->in_progress())
+                {
+                // @todo U.u. diese Recursion erlauben um Berichte innerhalb eines
+                // Berichtes freizugeben. Vorher prüfen auf Richtigkeit, z.B. E_FATAL
+                throw new SECUREPHP\E_FATAL('RAISE_RECURSION',NULL, $this);
+                }
+            else
+                {
+                SECUREPHP\PROTECT::getInstance()->in_progress(true);
+                if(NULL === $timeout) $timeout = $this->get_timeout();
+                SECUREPHP\PROTECT::getInstance()->notify($this->get_send_to(), $this, $timeout);
+                SECUREPHP\PROTECT::getInstance()->in_progress(false);
+                $this->has_raised(true);
+                }
+            }
+
         /**
          * @return string
          */
@@ -118,7 +157,8 @@ namespace
 
             $flag_is_raiseable = (bool) (is_a($e, 'Raisable') OR is_a($e, 'RaisableError'));
 
-            if($flag_is_raiseable AND $e->flag_details)
+            if($e->getPrevious());
+            elseif($flag_is_raiseable AND $e->flag_details)
                 {
                 $message .= '* '.$e->description.' in ' . $e->getFile() . ', Zeile ' . $e->getLine() . SECUREPHP_LINE_BREAK;
                 }
@@ -141,7 +181,8 @@ namespace
                 $message .= '* Status: ' . $e->get_status() . SECUREPHP_LINE_BREAK;
                 }
 
-            if(( $flag_is_raiseable AND $e->flag_details ) OR !$flag_is_raiseable)
+            if($e->getPrevious());
+            elseif(( $flag_is_raiseable AND $e->flag_details ) OR !$flag_is_raiseable)
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
                 $message .= '* Trace:' . SECUREPHP_LINE_BREAK;
@@ -158,7 +199,7 @@ namespace
                     $message .= '*'.SECUREPHP_LINE_BREAK."* " . ++$i . ') ' . get_class($attachement) . SECUREPHP_LINE_BREAK . (string) $attachement . "";
                 }
 
-            if(is_a($e, 'ConfigError') AND count($e->config_params))
+            if(is_a($e, 'ConfigError') AND count($e->params))
                 {
 
                 $message .= '*' . SECUREPHP_LINE_BREAK;
@@ -167,12 +208,12 @@ namespace
                 $message .= '*' . SECUREPHP_LINE_BREAK;
                 $message .= '* Konfigurationsdatei: ' . ($e->config_file?:' nicht vorhanden') . SECUREPHP_LINE_BREAK;
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* aktuelle Konfigurationswerte: ';
-                if( count($e->config_params) > 0 )
+                $message .= '* aktuelle Konfigurationsparameter: ' . SECUREPHP_LINE_BREAK;
+                if( count($e->params) > 0 )
                     {
                     $count = 1;
-                    $message .= SECUREPHP_LINE_BREAK;
-                    foreach($e->config_params AS $name => $value)
+                    $message .= '*' . SECUREPHP_LINE_BREAK;
+                    foreach($e->params AS $name => $value)
                         {
                         $message .= '* '. $count .') '.$name .': '.(string) $value . SECUREPHP_LINE_BREAK;
                         $count++;
@@ -196,41 +237,6 @@ namespace
             }
 
 
-        /**
-         * @param int|null $timeout
-         * @return void
-         * @throws \Exception
-         */
-        final public function raise($timeout = NULL)
-            {
-
-            if(true == $this->has_raised())
-                {
-                return NULL;
-                }
-            elseif(false == defined('SECUREPHP'))
-                {
-                throw new \AUTOFLOW\SECUREPHP\E_CONFIG('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' steht nicht zur Verfügung um diesen Fehlerbericht zu versenden.', NULL, $this);
-                }
-            elseif(false == \AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance())
-                {
-                throw new \AUTOFLOW\SECUREPHP\E_INIT('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' ist nicht initialisiert.', NULL, $this);
-                }
-            elseif(true == \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->in_progress())
-                {
-                // @todo U.u. diese Recursion erlauben um Berichte innerhalb eines
-                // Berichtes freizugeben. Vorher prüfen auf Richtigkeit, z.B. E_FATAL
-                throw new \AUTOFLOW\SECUREPHP\E_FATAL('RAISE_RECURSION',NULL, $this);
-                }
-            else
-                {
-                \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->in_progress(true);
-                if(NULL === $timeout) $timeout = $this->get_timeout();
-                \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->notify($this->get_send_to(), $this, $timeout);
-                \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->in_progress(false);
-                $this->has_raised(true);
-                }
-            }
 
         /**
          * @param null $flag
@@ -352,7 +358,7 @@ namespace
         /**
          * @return bool
          */
-        final public function set_params(ARRAY $params)
+        final public function add_params(ARRAY $params)
             {
             $this->params = $params;
             return true;
@@ -432,7 +438,7 @@ namespace
                 $message .= SECUREPHP_MAIL_EOL;
                 }
 
-            $message .= \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->get_app() . SECUREPHP_MAIL_EOL;
+            $message .= SECUREPHP\PROTECT::getInstance()->get_app() . SECUREPHP_MAIL_EOL;
             $message .= SECUREPHP_MAIL_EOL;
             $message .= $this->getMessage() . SECUREPHP_MAIL_EOL;
             $message .= SECUREPHP_MAIL_EOL;
@@ -630,7 +636,7 @@ namespace
     /**
      * Base class E_RAISABLE.
      */
-    class Raisable extends \AUTOFLOW\SECUREPHP\EXCEPTION
+    class Raisable extends SECUREPHP\EXCEPTION
         {
 
         // E_RAISEABLE HEAD
@@ -642,7 +648,7 @@ namespace
     /**
      * Base class E_RAISABLE_ERROR.
      */
-    class RaisableError extends \AUTOFLOW\SECUREPHP\ERROR_EXCEPTION
+    class RaisableError extends SECUREPHP\ERROR_EXCEPTION
         {
 
         // E_RAISEABLE_ERROR HEAD
@@ -692,7 +698,7 @@ namespace
         public function __construct($message=NULL, $status=NULL, \Exception $previous=NULL)
             {
             parent::__construct($message, NULL, $previous);
-            $this->application = \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->get_app();
+            $this->application = SECUREPHP\PROTECT::getInstance()->get_app();
             $this->status = $status;
             }
 
@@ -1059,27 +1065,6 @@ namespace
         public function set_config_file($file)
 			{
 			$this->config_file = $file;
-            return true;
-			}
-
-        /**
-         * @param string $name
-         * @param string $value
-         * @return bool
-         */
-        public function add_config_param($name='default', $value='')
-            {
-            $this->config_params[$name] = $value;
-            return true;
-            }
-
-        /**
-         * @param array $params
-         * @return bool
-         */
-        public function set_config_params(ARRAY $params)
-			{
-			$this->config_params = $params;
             return true;
 			}
 
