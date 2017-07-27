@@ -6,7 +6,7 @@
   - [error tickets](doc/errorticket.md)
   - [config errors](doc/configerror.md)
   - [batch reports](doc/batchreport.md)
-  - info & notice reports
+  - [info & notice reports](doc/inforeports.md)
   - init error reports
   - success reports
   - timer alerts
@@ -16,7 +16,7 @@
   - easily sent by email, to STDERR or to log
   
 
-* send errors to email inboxes
+* [send errors to email inboxes](doc/email_basisc.md)
   - send to admin
   - send to users
   - send to cc
