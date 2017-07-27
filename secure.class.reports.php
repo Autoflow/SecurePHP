@@ -161,7 +161,7 @@ namespace
             elseif($flag_is_raiseable AND $e->flag_details)
                 {
                 $message .= sprintf
-                    ('* %s %s %s, %s %s ' . SECUREPHP_LINE_BREAK,
+                    ("* %s %s %s, %s %s" . SECUREPHP_LINE_BREAK,
                     SECUREPHP\CONFIG::getInstance()->_($e->description),
                     SECUREPHP\CONFIG::getInstance()->_('within'),
                     $e->getFile(),
@@ -169,6 +169,7 @@ namespace
                     $e->getLine()
                     );
                 }
+            elseif($flag_is_raiseable AND !$e->flag_details);
             else
                 {
                 $message .= sprintf
@@ -208,21 +209,26 @@ namespace
                 }
 
             if($e->getPrevious());
-            elseif(( $flag_is_raiseable AND $e->flag_details ) OR !$flag_is_raiseable)
+            elseif(($flag_is_raiseable AND $e->flag_details ) OR !$flag_is_raiseable)
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
                 $message .= '* '. SECUREPHP\CONFIG::getInstance()->_('trace') . ':' . SECUREPHP_LINE_BREAK;
                 $message .= $this->formatTrace($e);
                 }
 
-            if(is_a($e, 'ErrorReport') AND $e->has_next())
+            if(is_a($e, 'BatchReport') AND $e->has_next())
                 {
                 $i = 0;
                 $message .= '*'  . SECUREPHP_LINE_BREAK;
-                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('errors') . ': ' . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('contents') . ': ' . SECUREPHP_LINE_BREAK;
                 $message .= '* ' . SECUREPHP_LINE_BREAK;
                 foreach ($e->get_attachments() AS $attachement)
-                    $message .= '*'.SECUREPHP_LINE_BREAK."* " . ++$i . ') ' . get_class($attachement) . SECUREPHP_LINE_BREAK . (string) $attachement . "";
+                    {
+                    $message .= '* ' . SECUREPHP_LINE_BREAK;
+                    $message .= '* ' . ++$i . ') ' . get_class($attachement) . SECUREPHP_LINE_BREAK;
+                    $message .= '* '. SECUREPHP_LINE_BREAK . (string) $attachement;
+                    $message .= '* ' . SECUREPHP_LINE_BREAK;
+                    }
                 }
 
             if(is_a($e, 'ConfigError') AND count($e->params))
@@ -307,6 +313,16 @@ namespace
         final public function get_send_to()
             {
             return $this->send_to;
+            }
+
+        /**
+         * @param null $flag
+         * @return bool
+         */
+        final public function details($flag = NULL)
+            {
+            if(NULL === $flag) return (bool) $this->flag_details;
+            else $this->flag_details = (bool) $flag;
             }
 
         /**
@@ -772,24 +788,17 @@ namespace
             }
         }
 
-    /**
-     * Class ErrorReport
-     * @extends Exception
-     */
-    class ErrorReport extends \ErrorTicket
+    class BatchReport extends \ErrorTicket
         {
-
-        // ERRORREPORT HEAD
-
         /**
          * @var string
          */
-        public $description = "Fehlerbericht";
+        public $description = 'batch report';
 
         /**
          * @var bool
          */
-        protected $flag_details = true;
+        protected $flag_details = false;
 
         /**
          * @var \Exception[]
@@ -821,6 +830,14 @@ namespace
         final protected function get_attachments()
             {
             return $this->stack;
+            }
+
+        /**
+         * @return string
+         */
+        public function get_mail_header()
+            {
+            return AUTOFLOW\SECUREPHP\PROTECT::getInstance()->get_app() . ' Batch report ';
             }
 
         /**
@@ -914,10 +931,32 @@ namespace
         }
 
     /**
+     * Class ErrorReport
+     * @extends Exception
+     */
+    class ErrorReport extends \BatchReport
+        {
+
+        // ERRORREPORT HEAD
+
+        /**
+         * @var string
+         */
+        public $description = "error report";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = false;
+
+
+        }
+
+    /**
      * Class SuccessReport
      * @inherit \ErrorReport
      */
-    final class SuccessReport extends \ErrorReport
+    class SuccessReport extends \BatchReport
 
         {
 
@@ -994,6 +1033,8 @@ namespace
             return $message;
             }
         }
+
+
 
     /**
      * Class Notice.
