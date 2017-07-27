@@ -75,14 +75,21 @@ namespace AUTOFLOW\SECUREPHP
 
             $message = '';
 
-            $message .= '* Erstellt in: ' . $e->getFile() . ', Zeile ' . $e->getLine() . SECUREPHP_LINE_BREAK;
+            $message .= sprintf
+                ('* %s %s %s, %s %s ' . SECUREPHP_LINE_BREAK,
+                    get_class($e),
+                    CONFIG::getInstance()->_('within'),
+                    $e->getFile(),
+                    CONFIG::getInstance()->_('line'),
+                    $e->getLine()
+                );
 
-            $message .= '* Beschreibung: ' . $e->getMessage() . SECUREPHP_LINE_BREAK;
+            $message .= '* ' . CONFIG::getInstance()->_('description') . ': ' . $e->getMessage() . SECUREPHP_LINE_BREAK;
 
             if(\AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance()->debug())
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Programmablauf: ' . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . CONFIG::getInstance()->_('trace') . ': ' . SECUREPHP_LINE_BREAK;
                 $message .= $this->formatTrace($e);
                 }
             return $message;

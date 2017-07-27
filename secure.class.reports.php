@@ -160,40 +160,66 @@ namespace
             if($e->getPrevious());
             elseif($flag_is_raiseable AND $e->flag_details)
                 {
-                $message .= '* '.$e->description.' in ' . $e->getFile() . ', Zeile ' . $e->getLine() . SECUREPHP_LINE_BREAK;
+                $message .= sprintf
+                    ('* %s %s %s, %s %s ' . SECUREPHP_LINE_BREAK,
+                    SECUREPHP\CONFIG::getInstance()->_($e->description),
+                    SECUREPHP\CONFIG::getInstance()->_('within'),
+                    $e->getFile(),
+                    SECUREPHP\CONFIG::getInstance()->_('line'),
+                    $e->getLine()
+                    );
                 }
             else
                 {
-                $message .= '* '.get_class($e).' in ' . $e->getFile() . ', Zeile ' . $e->getLine() . SECUREPHP_LINE_BREAK;
+                $message .= sprintf
+                    ('* %s %s %s, %s %s ' . SECUREPHP_LINE_BREAK,
+                        get_class($e),
+                        SECUREPHP\CONFIG::getInstance()->_('within'),
+                        $e->getFile(),
+                        SECUREPHP\CONFIG::getInstance()->_('line'),
+                        $e->getLine()
+                    );
                 }
 
-            $message .= '* Beschreibung: ' . $e->getMessage() . SECUREPHP_LINE_BREAK;
+            $message .= sprintf
+                ('* %s: %s'  . SECUREPHP_LINE_BREAK,
+                SECUREPHP\CONFIG::getInstance()->_('description'),
+                $e->getMessage()
+                );
 
             if($flag_is_raiseable AND $e->get_note())
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Hinweis: ' . $e->get_note() . SECUREPHP_LINE_BREAK;
+                $message .= sprintf
+                    ('* %s: %s'  . SECUREPHP_LINE_BREAK,
+                    SECUREPHP\CONFIG::getInstance()->_('notes'),
+                    $e->get_note()
+                    );
                 }
 
             if($flag_is_raiseable AND $e->get_status())
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Status: ' . $e->get_status() . SECUREPHP_LINE_BREAK;
+                $message .= sprintf
+                    ('* %s: %s'  . SECUREPHP_LINE_BREAK,
+                        SECUREPHP\CONFIG::getInstance()->_('state'),
+                        $e->get_status()
+                    );
                 }
 
             if($e->getPrevious());
             elseif(( $flag_is_raiseable AND $e->flag_details ) OR !$flag_is_raiseable)
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Trace:' . SECUREPHP_LINE_BREAK;
+                $message .= '* '. SECUREPHP\CONFIG::getInstance()->_('trace') . ':' . SECUREPHP_LINE_BREAK;
                 $message .= $this->formatTrace($e);
                 }
 
             if(is_a($e, 'ErrorReport') AND $e->has_next())
                 {
                 $i = 0;
-                $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Fehler: ' . SECUREPHP_LINE_BREAK;
+                $message .= '*'  . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('errors') . ': ' . SECUREPHP_LINE_BREAK;
                 $message .= '* ' . SECUREPHP_LINE_BREAK;
                 foreach ($e->get_attachments() AS $attachement)
                     $message .= '*'.SECUREPHP_LINE_BREAK."* " . ++$i . ') ' . get_class($attachement) . SECUREPHP_LINE_BREAK . (string) $attachement . "";
@@ -202,13 +228,13 @@ namespace
             if(is_a($e, 'ConfigError') AND count($e->params))
                 {
 
-                $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Hinweise zur Konfiguration:' . SECUREPHP_LINE_BREAK;
-                $message .= '* Möglicherweise sind die Konfigurationsparameter nicht aktuell.' . SECUREPHP_LINE_BREAK;
-                $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Konfigurationsdatei: ' . ($e->config_file?:' nicht vorhanden') . SECUREPHP_LINE_BREAK;
-                $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* aktuelle Konfigurationsparameter: ' . SECUREPHP_LINE_BREAK;
+                $message .= '*'  . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('config notes') . ':' . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('obsolete configuration') . SECUREPHP_LINE_BREAK;
+                $message .= '*'  . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('config file') . ': ' . ($e->config_file ? : SECUREPHP\CONFIG::getInstance()->_('not present')) . SECUREPHP_LINE_BREAK;
+                $message .= '*'  . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('current configuration') .': ' . SECUREPHP_LINE_BREAK;
                 if( count($e->params) > 0 )
                     {
                     $count = 1;
@@ -221,15 +247,15 @@ namespace
                     }
                 else
                     {
-                    $message .= 'nicht vorhanden' . SECUREPHP_LINE_BREAK;
+                    $message .= SECUREPHP\CONFIG::getInstance()->_('not present') . SECUREPHP_LINE_BREAK;
                     }
                 }
 
             if ($e->getPrevious())
                 {
                 $message .= SECUREPHP_LINE_BREAK;
-                $message .= "* Vorrausgehend:" . SECUREPHP_LINE_BREAK;
-                $message .= '*' . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('previous') . ':' . SECUREPHP_LINE_BREAK;
+                $message .= '*'  . SECUREPHP_LINE_BREAK;
                 $message .= $this->toString($e->getPrevious());
                 }
 
@@ -1200,6 +1226,24 @@ namespace
         }
 
     /**
+     * Class Eof
+     * @inherit Error
+     */
+
+    class EofError extends \ErrorTicket
+        {
+        /**
+         * @var string
+         */
+        public $description = "Ablauffehler";
+
+        /**
+         * @var bool
+         */
+        public $flag_details = false;
+        }
+
+    /**
      * Class RunTimeError
      *
      * Vielleicht kann man hier mit Implements() oder einem zweiten extends()
@@ -1207,13 +1251,13 @@ namespace
      *
      * @inherit \ErrorException
      */
-	class Error extends \RaisableError
+	class PhpError extends \RaisableError
 		{
 
         /**
          * @var string
          */
-        public $description = "Laufzeitfehler";
+        public $description = "runtime error";
 
         /**
          * @var bool
@@ -1245,7 +1289,7 @@ namespace
      * Class ShutdownError
      * @inherit Error
      */
-	class ShutdownError extends \Error
+	class ShutdownError extends \PhpError
 
 		{
 
@@ -1261,22 +1305,6 @@ namespace
 
 		}
 
-    /**
-     * Class Eof
-     * @inherit Error
-     */
 
-    class EofError extends \Error
-        {
-        /**
-         * @var string
-         */
-        public $description = "Ablauffehler";
-
-        /**
-         * @var bool
-         */
-        public $flag_details = false;
-        }
 
 	}

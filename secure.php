@@ -1313,7 +1313,7 @@ namespace AUTOFLOW\SECUREPHP
             // when reporting turned off.
             if(SECUREPHP_HANDLE_OFF == PROTECT::getInstance()->handle())
                 {
-                return;
+                return false;
                 }
             // error handling.
             else
@@ -1321,7 +1321,7 @@ namespace AUTOFLOW\SECUREPHP
 
                 // Error handling (strict or loose)
 
-                $error = new \Error($this->get_php_error($error_level)[0] . ' ' . $error_message, NULL, $error_level, $error_file, $error_line);
+                $error = new \PhpError($this->get_php_error($error_level)[0] . ' ' . $error_message, NULL, $error_level, $error_file, $error_line);
                 $error->set_status('Das Skript wird ' . (!error_reporting() ? 'mittels @ fortgeführt' : (SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode() ? 'abgebrochen (Strict-Mode).' : 'nicht abgebrochen (Loose-Mode)')));
 
                 // Supressed by @
@@ -1511,7 +1511,7 @@ namespace AUTOFLOW\SECUREPHP
             // EOF error
             if (false === $this->is_eof())
                 {
-                $error = new \EofError("Die Datei hat das Programmende nicht erreicht.", 0, NULL, __FILE__, __LINE__);
+                $error = new \EofError(CONFIG::getInstance()->_('eof error'));
                 $error->send_to('admin>user,log');
                 $error->raise();
                 }
@@ -1830,7 +1830,7 @@ namespace AUTOFLOW\SECUREPHP
         /**
          * @var string
          */
-        protected $locale = "en";
+        protected $locale = "en_EN";
         /**
          * @var int
          */
@@ -1956,22 +1956,21 @@ namespace AUTOFLOW\SECUREPHP
 
         /**
          * @param string $token
-         * @param null $lang
+         * @param null $language
          * @return string
          */
-        final public function _($token, $lang = null)
+        final public function _($token, $language = 'en_EN')
             {
-            global $translation;
-            if(empty($lang)
-                || !array_key_exists($token, $translation)
-                || !array_key_exists($lang, $translation[$token])
-                )
+            $language = $this->locale;
+            $result = DB::getInstance()->server->query("SELECT * FROM translations WHERE token = '$token'");
+            $row = $result->fetchArray();
+            if(empty($row) || empty($row[$language]))
                 {
                 return $token;
                 }
             else
                 {
-                return $translation[$token][$lang];
+                return $row[$language];
                 }
             }
 
@@ -2109,8 +2108,9 @@ namespace AUTOFLOW\SECUREPHP
                 BOOTSTRAP::$date = '\J\a\n\u\a\r\y 1, 1970';
                 return true;
                 }
-            elseif('de' == strtolower($env))
+            elseif('de' == substr(strtolower($env), 0, 2))
                 {
+                $this->locale = "de_DE";
                 return true;
                 }
             else return;
@@ -2259,7 +2259,7 @@ namespace AUTOFLOW\SECUREPHP
             $message .= '* ' . get_class($e) . SECUREPHP_LINE_BREAK;
             $message .= '* ' . date(BOOTSTRAP::$date) . SECUREPHP_LINE_BREAK;
             $message .= '*' . SECUREPHP_NEW_LINE;
-            $message .= '* betroffene Anwendung: ' . PROTECT::getInstance()->get_app() . SECUREPHP_LINE_BREAK;
+            $message .= '* ' . CONFIG::getInstance()->_('concerned') . ': ' . PROTECT::getInstance()->get_app() . SECUREPHP_LINE_BREAK;
             $message .= '*' . SECUREPHP_NEW_LINE;
             $message .= $e->__toString();
             $message .= '*' . SECUREPHP_LINE_BREAK . '*/';
@@ -3218,8 +3218,8 @@ namespace AUTOFLOW\SECUREPHP
         final public function init()
             {
             if($this->is_ready()) return true;
-            elseif(!$db = pathinfo(BOOTSTRAP::getInstance()->get_script_name(), PATHINFO_FILENAME) . '.sqlite');
-            elseif(!file_exists($db) AND false == $this->createdb())
+            elseif(!$db = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'securephp.sqlite');
+            elseif(!file_exists($db))
                 {
                 $this->set_init_error(new E_INIT('konnte ' . SECUREPHP . '-Datenbank nicht erstellen.', false, $this->get_init_error()));
                 return false;
@@ -3272,20 +3272,6 @@ namespace AUTOFLOW\SECUREPHP
         final public function get_init_error()
             {
             return $this->init_error;
-            }
-
-        /**
-         * Copy default database to destination.
-         * @return bool
-         */
-        final protected function createdb()
-            {
-            if(false == copy(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'securephp.sqlite', pathinfo(BOOTSTRAP::getInstance()->get_script_name(), PATHINFO_FILENAME) . '.sqlite'))
-                {
-                $this->set_init_error(new E_INIT('konnte ' . SECUREPHP . '-Datenbank nicht kopieren.', false));
-                return false;
-                }
-            else return true;
             }
 
         } // final class DB
