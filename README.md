@@ -5,6 +5,7 @@
 * predefined error reports based on exceptions
   - [error tickets](doc/errorticket.md)
   - [config errors](doc/configerror.md)
+  - [batch reports](doc/batchreport.md)
   - info & notice reports
   - init error reports
   - success reports
