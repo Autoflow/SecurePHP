@@ -54,9 +54,9 @@ catch(PDOException $e)
 *
 * send by: C:/Bitnami/apache2/htdocs/GitHub/SecurePHP/2.0/tests/testcase.php
 *
-* description: reminder about present errors and warnings
+* description: reminder
 *
-* current state: you will get notified every 30 minutes when errors still are present
+* current state: you will get notified every 30 minutes when same errors are still present
 *
 * table of contents:
 *
