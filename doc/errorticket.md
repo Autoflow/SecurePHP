@@ -7,6 +7,9 @@ try {
     // start Autoflow\SecurePHP
     $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance(true, false);
 
+    // display errors
+    $mysecure->mute(false);
+
     // set to strict mode aborting on E_NOTICES
     $mysecure->loose(false);
 

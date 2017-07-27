@@ -7,6 +7,9 @@ try {
     // start Autoflow\SecurePHP
     $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance(true, false);
 
+    // display errors
+    $mysecure->mute(false);
+
     // try to create pdo object
     $dbh = new PDO(PDO_DSN, PDO_USER, PDO_PASSWORD);
 
@@ -30,7 +33,7 @@ catch(PDOException $e)
 
 ### Result:
 
-```json
+```text
 /**
 * SecurePHP
 *
