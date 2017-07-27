@@ -727,7 +727,7 @@ namespace
         /**
          * @var string
          */
-        public $description    = 'Fehlerticket';
+        public $description    = 'error ticket';
 
         /**
          * @var bool
@@ -762,7 +762,7 @@ namespace
         /**
          * @var string
          */
-        public $description = 'Bestätigungsnachricht';
+        public $description = 'confirmation ticket';
 
         /**
          * @var bool
