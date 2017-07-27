@@ -26,7 +26,7 @@
   - catch undefined variables, indexes and offsets
   - […]
   
-* catch recurring errors
+* [catch recurring errors](doc/timeout.md)
   - inform about repetitives errors (ie. every 30 minutes)
   - optimized for cronjobs
 
