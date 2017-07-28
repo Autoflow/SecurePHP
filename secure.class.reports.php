@@ -135,7 +135,7 @@ namespace
                 {
                 // @todo U.u. diese Recursion erlauben um Berichte innerhalb eines
                 // Berichtes freizugeben. Vorher prüfen auf Richtigkeit, z.B. E_FATAL
-                throw new SECUREPHP\E_FATAL('RAISE_RECURSION',NULL, $this);
+                throw new SECUREPHP\E_FATAL('Internal ' . SECUREPHP . ' error', NULL, $this);
                 }
             else
                 {
@@ -1239,7 +1239,7 @@ namespace
      * Class TimerAlert
      * @inherit \ErrorReport
      */
-	final class TimerAlert extends \ErrorReport
+	final class Reminder extends \ErrorReport
 		{
 
         /**
