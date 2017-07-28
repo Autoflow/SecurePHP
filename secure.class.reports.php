@@ -22,6 +22,8 @@ namespace
 
 	{
 
+    use AUTOFLOW\SECUREPHP;
+
     /**
      * Version of current reports class.
      */
@@ -41,11 +43,11 @@ namespace
 
 
         /**
-         * @todo change to protected, @see set_status
+         * @todo change to protected, @see set_state
          * Statusmeldung.
          * @var string
          */
-		public $status = '';
+		public $state = '';
 
         /**
          * @var string
@@ -66,7 +68,7 @@ namespace
 
         /**
          * @todo change to protected,
-         * @todo @see set_params, @see add_param
+         * @todo @see add_params, @see add_param
          * Weitere benutzerdefinierte Parameter
          * @var array
          */
@@ -108,6 +110,43 @@ namespace
 
         // TRAIT METHODS
 
+
+        /**
+         * @param int|null $timeout
+         * @return void
+         * @throws \Exception
+         */
+        final public function raise($timeout = NULL)
+            {
+
+            if(true == $this->has_raised())
+                {
+                return;
+                }
+            elseif(false == defined('SECUREPHP'))
+                {
+                throw new SECUREPHP\E_CONFIG('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' steht nicht zur Verfügung um diesen Fehlerbericht zu versenden.', NULL, $this);
+                }
+            elseif(false == SECUREPHP\BOOTSTRAP::getInstance())
+                {
+                throw new SECUREPHP\E_INIT('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' ist nicht initialisiert.', NULL, $this);
+                }
+            elseif(true == SECUREPHP\PROTECT::getInstance()->in_progress())
+                {
+                // @todo U.u. diese Recursion erlauben um Berichte innerhalb eines
+                // Berichtes freizugeben. Vorher prüfen auf Richtigkeit, z.B. E_FATAL
+                throw new SECUREPHP\E_FATAL('Internal ' . SECUREPHP . ' error', NULL, $this);
+                }
+            else
+                {
+                SECUREPHP\PROTECT::getInstance()->in_progress(true);
+                if(NULL === $timeout) $timeout = $this->get_timeout();
+                SECUREPHP\PROTECT::getInstance()->notify($this->get_send_to(), $this, $timeout);
+                SECUREPHP\PROTECT::getInstance()->in_progress(false);
+                $this->has_raised(true);
+                }
+            }
+
         /**
          * @return string
          */
@@ -118,47 +157,111 @@ namespace
 
             $flag_is_raiseable = (bool) (is_a($e, 'Raisable') OR is_a($e, 'RaisableError'));
 
-            if($flag_is_raiseable AND $e->flag_details)
+            if($e->getPrevious());
+            elseif($flag_is_raiseable AND $e->flag_details)
                 {
-                $message .= '* '.$e->description.' in ' . $e->getFile() . ', Zeile ' . $e->getLine() . SECUREPHP_LINE_BREAK;
+                $message .= sprintf
+                    ("* %s %s %s, %s %s" . SECUREPHP_LINE_BREAK,
+                    SECUREPHP\CONFIG::getInstance()->_($e->description),
+                    SECUREPHP\CONFIG::getInstance()->_('within'),
+                    $e->getFile(),
+                    SECUREPHP\CONFIG::getInstance()->_('line'),
+                    $e->getLine()
+                    );
+                }
+            elseif($flag_is_raiseable AND !$e->flag_details);
+            else
+                {
+                $message .= sprintf
+                    ('* %s %s %s, %s %s ' . SECUREPHP_LINE_BREAK,
+                        get_class($e),
+                        SECUREPHP\CONFIG::getInstance()->_('within'),
+                        $e->getFile(),
+                        SECUREPHP\CONFIG::getInstance()->_('line'),
+                        $e->getLine()
+                    );
                 }
 
-            $message .= '* Beschreibung: ' . $e->getMessage() . SECUREPHP_LINE_BREAK;
+            $message .= sprintf
+                ('* %s: %s'  . SECUREPHP_LINE_BREAK,
+                SECUREPHP\CONFIG::getInstance()->_('description'),
+                $e->getMessage()
+                );
 
             if($flag_is_raiseable AND $e->get_note())
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Hinweis: ' . $e->get_note() . SECUREPHP_LINE_BREAK;
+                $message .= sprintf
+                    ('* %s: %s'  . SECUREPHP_LINE_BREAK,
+                    SECUREPHP\CONFIG::getInstance()->_('notes'),
+                    $e->get_note()
+                    );
                 }
 
             if($flag_is_raiseable AND $e->get_status())
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Status: ' . $e->get_status() . SECUREPHP_LINE_BREAK;
+                $message .= sprintf
+                    ('* %s: %s'  . SECUREPHP_LINE_BREAK,
+                        SECUREPHP\CONFIG::getInstance()->_('state'),
+                        $e->get_status()
+                    );
                 }
 
-            if(( $flag_is_raiseable AND $e->flag_details ) OR !$flag_is_raiseable)
+            if($e->getPrevious());
+            elseif(($flag_is_raiseable AND $e->flag_details ) OR !$flag_is_raiseable)
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Trace:' . SECUREPHP_LINE_BREAK;
+                $message .= '* '. SECUREPHP\CONFIG::getInstance()->_('trace') . ':' . SECUREPHP_LINE_BREAK;
                 $message .= $this->formatTrace($e);
                 }
 
-            if(is_a($e, 'ErrorReport') AND $e->has_next())
+            if(is_a($e, 'BatchReport') AND $e->has_next())
                 {
                 $i = 0;
-                $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Fehler: ' . SECUREPHP_LINE_BREAK;
+                $message .= '*'  . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('contents') . ': ' . SECUREPHP_LINE_BREAK;
                 $message .= '* ' . SECUREPHP_LINE_BREAK;
                 foreach ($e->get_attachments() AS $attachement)
-                    $message .= '*'.SECUREPHP_LINE_BREAK."* " . ++$i . ') ' . get_class($attachement) . SECUREPHP_LINE_BREAK . (string) $attachement . "";
+                    {
+                    $message .= '* ' . SECUREPHP_LINE_BREAK;
+                    $message .= '* ' . ++$i . ') ' . get_class($attachement) . SECUREPHP_LINE_BREAK;
+                    $message .= '* '. SECUREPHP_LINE_BREAK . (string) $attachement;
+                    $message .= '* ' . SECUREPHP_LINE_BREAK;
+                    }
+                }
+
+            if(is_a($e, 'ConfigError') AND count($e->params))
+                {
+
+                $message .= '*'  . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('config notes') . ':' . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('obsolete configuration') . SECUREPHP_LINE_BREAK;
+                $message .= '*'  . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('config file') . ': ' . ($e->config_file ? : SECUREPHP\CONFIG::getInstance()->_('not present')) . SECUREPHP_LINE_BREAK;
+                $message .= '*'  . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('current configuration') .': ' . SECUREPHP_LINE_BREAK;
+                if( count($e->params) > 0 )
+                    {
+                    $count = 1;
+                    $message .= '*' . SECUREPHP_LINE_BREAK;
+                    foreach($e->params AS $name => $value)
+                        {
+                        $message .= '* '. $count .') '.$name .': '.(string) $value . SECUREPHP_LINE_BREAK;
+                        $count++;
+                        }
+                    }
+                else
+                    {
+                    $message .= SECUREPHP\CONFIG::getInstance()->_('not present') . SECUREPHP_LINE_BREAK;
+                    }
                 }
 
             if ($e->getPrevious())
                 {
                 $message .= SECUREPHP_LINE_BREAK;
-                $message .= "* Vorrausgehend:" . SECUREPHP_LINE_BREAK;
-                $message .= '*' . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . SECUREPHP\CONFIG::getInstance()->_('previous') . ':' . SECUREPHP_LINE_BREAK;
+                $message .= '*'  . SECUREPHP_LINE_BREAK;
                 $message .= $this->toString($e->getPrevious());
                 }
 
@@ -223,7 +326,12 @@ namespace
          */
         final public function get_md5()
             {
-            return md5(serialize($this));
+
+            // Nach adden von reminder funktioniert diese Zeile nicht mehr ..
+            #return md5(serialize($this));
+
+            // neu:
+            return md5(($this->__toString()));
             }
 
         /**
@@ -248,6 +356,16 @@ namespace
             }
 
         /**
+         * @param null $flag
+         * @return bool
+         */
+        final public function details($flag = NULL)
+            {
+            if(NULL === $flag) return (bool) $this->flag_details;
+            else $this->flag_details = (bool) $flag;
+            }
+
+        /**
          * @param int $code
          * @return bool
          */
@@ -266,12 +384,12 @@ namespace
             }
 
         /**
-         * @param string $status
+         * @param string $state
          * @return bool
          */
-        final public function set_status($status)
+        final public function set_state($state)
             {
-            $this->status = $status;
+            $this->state = $state;
             return true;
             }
 
@@ -280,7 +398,7 @@ namespace
          */
         final protected function get_status()
             {
-            return $this->status;
+            return $this->state;
             }
 
         /**
@@ -322,7 +440,7 @@ namespace
         /**
          * @return bool
          */
-        final public function set_params(ARRAY $params)
+        final public function add_params(ARRAY $params)
             {
             $this->params = $params;
             return true;
@@ -402,7 +520,7 @@ namespace
                 $message .= SECUREPHP_MAIL_EOL;
                 }
 
-            $message .= \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->get_app() . SECUREPHP_MAIL_EOL;
+            $message .= SECUREPHP\PROTECT::getInstance()->get_app() . SECUREPHP_MAIL_EOL;
             $message .= SECUREPHP_MAIL_EOL;
             $message .= $this->getMessage() . SECUREPHP_MAIL_EOL;
             $message .= SECUREPHP_MAIL_EOL;
@@ -600,7 +718,7 @@ namespace
     /**
      * Base class E_RAISABLE.
      */
-    class Raisable extends \AUTOFLOW\SECUREPHP\EXCEPTION
+    class Raisable extends SECUREPHP\EXCEPTION
         {
 
         // E_RAISEABLE HEAD
@@ -612,7 +730,7 @@ namespace
     /**
      * Base class E_RAISABLE_ERROR.
      */
-    class RaisableError extends \AUTOFLOW\SECUREPHP\ERROR_EXCEPTION
+    class RaisableError extends SECUREPHP\ERROR_EXCEPTION
         {
 
         // E_RAISEABLE_ERROR HEAD
@@ -644,7 +762,7 @@ namespace
         /**
          * @var string
          */
-        public $description    = 'Fehlerticket';
+        public $description    = 'error ticket';
 
         /**
          * @var bool
@@ -662,8 +780,8 @@ namespace
         public function __construct($message=NULL, $status=NULL, \Exception $previous=NULL)
             {
             parent::__construct($message, NULL, $previous);
-            $this->application = \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->get_app();
-            $this->status = $status;
+            $this->application = SECUREPHP\PROTECT::getInstance()->get_app();
+            $this->state = $status;
             }
 
         }
@@ -679,7 +797,7 @@ namespace
         /**
          * @var string
          */
-        public $description = 'Bestätigungsnachricht';
+        public $description = 'confirmation ticket';
 
         /**
          * @var bool
@@ -710,24 +828,17 @@ namespace
             }
         }
 
-    /**
-     * Class ErrorReport
-     * @extends Exception
-     */
-    class ErrorReport extends \ErrorTicket
+    class BatchReport extends \ErrorTicket
         {
-
-        // ERRORREPORT HEAD
-
         /**
          * @var string
          */
-        public $description = "Fehlerbericht";
+        public $description = 'batch report';
 
         /**
          * @var bool
          */
-        protected $flag_details = true;
+        protected $flag_details = false;
 
         /**
          * @var \Exception[]
@@ -759,6 +870,14 @@ namespace
         final protected function get_attachments()
             {
             return $this->stack;
+            }
+
+        /**
+         * @return string
+         */
+        public function get_mail_header()
+            {
+            return AUTOFLOW\SECUREPHP\PROTECT::getInstance()->get_app() . ' Batch report ';
             }
 
         /**
@@ -852,10 +971,32 @@ namespace
         }
 
     /**
+     * Class ErrorReport
+     * @extends Exception
+     */
+    class ErrorReport extends \BatchReport
+        {
+
+        // ERRORREPORT HEAD
+
+        /**
+         * @var string
+         */
+        public $description = "error report";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = false;
+
+
+        }
+
+    /**
      * Class SuccessReport
      * @inherit \ErrorReport
      */
-    final class SuccessReport extends \ErrorReport
+    class SuccessReport extends \BatchReport
 
         {
 
@@ -864,7 +1005,7 @@ namespace
         /**
          * @var string
          */
-        public $description = "Verabeitungsbericht";
+        public $description = "working range";
 
         /**
          * @var bool
@@ -933,6 +1074,8 @@ namespace
             }
         }
 
+
+
     /**
      * Class Notice.
      * @inherit \ErrorTicket
@@ -943,7 +1086,7 @@ namespace
         /**
          * @var string
          */
-        public $description = 'Hinweis';
+        public $description = 'notice';
 
         /**
          * @var bool
@@ -971,7 +1114,7 @@ namespace
         /**
          * @var string
          */
-		public $description    = 'Konfigurationsfehler';
+		public $description    = 'config error';
 
         /**
          * @var bool
@@ -1032,27 +1175,6 @@ namespace
             return true;
 			}
 
-        /**
-         * @param string $name
-         * @param string $value
-         * @return bool
-         */
-        public function add_config_param($name='default', $value='')
-            {
-            $this->config_params[$name] = $value;
-            return true;
-            }
-
-        /**
-         * @param array $params
-         * @return bool
-         */
-        public function set_config_params(ARRAY $params)
-			{
-			$this->config_params = $params;
-            return true;
-			}
-
 		}
 
 
@@ -1074,7 +1196,7 @@ namespace
         /**
          * @var string
          */
-		public $description = 'Start- oder Initialisierungsfehler';
+		public $description = 'init error';
 
         /**
          * @var bool
@@ -1099,7 +1221,7 @@ namespace
         /**
          * @var string
          */
-        public $description = 'Übergangsfehler';
+        public $description = 'transition error';
 
         /**
          * @var bool
@@ -1118,7 +1240,7 @@ namespace
         /**
          * @var string
          */
-        public $description = 'Transaktionsfehler';
+        public $description = 'transaction error';
 
         /**
          * @var bool
@@ -1139,7 +1261,7 @@ namespace
         /**
          * @var string
          */
-		public $description = 'Objektfehler';
+		public $description = 'class error';
 
         /**
          * @var bool
@@ -1152,18 +1274,18 @@ namespace
      * Class TimerAlert
      * @inherit \ErrorReport
      */
-	final class TimerAlert extends \ErrorReport
+	final class Reminder extends \ErrorReport
 		{
 
         /**
          * @var string
          */
-		public $description = 'Erinnerung an weiterhin bestehenden Fehler';
+		public $description = 'reminder alert';
 
         /**
          * @var bool
          */
-        protected $flag_details = true;
+        protected $flag_details = false;
 		}
 
     /**
@@ -1176,12 +1298,30 @@ namespace
         /**
          * @var string
          */
-        public $description = 'Unbehandelte Exception';
+        public $description = 'uncaught exception';
 
         /**
          * @var bool
          */
         protected $flag_details = false;
+        }
+
+    /**
+     * Class Eof
+     * @inherit Error
+     */
+
+    class EofError extends \ErrorTicket
+        {
+        /**
+         * @var string
+         */
+        public $description = "eof error";
+
+        /**
+         * @var bool
+         */
+        public $flag_details = false;
         }
 
     /**
@@ -1192,13 +1332,13 @@ namespace
      *
      * @inherit \ErrorException
      */
-	class Error extends \RaisableError
+	class PhpError extends \RaisableError
 		{
 
         /**
          * @var string
          */
-        public $description = "Laufzeitfehler";
+        public $description = "runtime error";
 
         /**
          * @var bool
@@ -1230,14 +1370,14 @@ namespace
      * Class ShutdownError
      * @inherit Error
      */
-	class ShutdownError extends \Error
+	class ShutdownError extends \PhpError
 
 		{
 
         /**
          * @var string
          */
-		public $description = "Shutdown-Fehler";
+		public $description = "shutdown error";
 
         /**
          * @var bool
@@ -1246,22 +1386,6 @@ namespace
 
 		}
 
-    /**
-     * Class Eof
-     * @inherit Error
-     */
 
-    class EofError extends \Error
-        {
-        /**
-         * @var string
-         */
-        public $description = "Ablauffehler";
-
-        /**
-         * @var bool
-         */
-        public $flag_details = false;
-        }
 
 	}

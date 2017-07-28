@@ -75,14 +75,21 @@ namespace AUTOFLOW\SECUREPHP
 
             $message = '';
 
-            $message .= '* Erstellt in: ' . $e->getFile() . ', Zeile ' . $e->getLine() . SECUREPHP_LINE_BREAK;
+            $message .= sprintf
+                ('* %s %s %s, %s %s ' . SECUREPHP_LINE_BREAK,
+                    get_class($e),
+                    CONFIG::getInstance()->_('within'),
+                    $e->getFile(),
+                    CONFIG::getInstance()->_('line'),
+                    $e->getLine()
+                );
 
-            $message .= '* Beschreibung: ' . $e->getMessage() . SECUREPHP_LINE_BREAK;
+            $message .= '* ' . CONFIG::getInstance()->_('description') . ': ' . $e->getMessage() . SECUREPHP_LINE_BREAK;
 
             if(\AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance()->debug())
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= '* Programmablauf: ' . SECUREPHP_LINE_BREAK;
+                $message .= '* ' . CONFIG::getInstance()->_('trace') . ': ' . SECUREPHP_LINE_BREAK;
                 $message .= $this->formatTrace($e);
                 }
             return $message;
@@ -102,8 +109,8 @@ namespace AUTOFLOW\SECUREPHP
             foreach($tracestack AS $l => $trace)
                 {
                 if(!isset($trace['file'])) $trace['file'] = '(intern) ';
-                if(!isset($trace['line'])) $trace['line'] = ''; else $trace['line'] = "({$trace['line']})";
-                if(!isset($trace['class'])) $trace['class'] = ''; else $trace['class'] = $trace['class'] . '->';
+                if(!isset($trace['line'])) $trace['line'] = ' '; else $trace['line'] = " ({$trace['line']})";
+                if(!isset($trace['class'])) $trace['class'] = ' '; else $trace['class'] = ' ' . $trace['class'] . '->';
                 $params = ARRAY();
                 foreach($trace['args'] AS  $arg)
                     {
@@ -111,7 +118,7 @@ namespace AUTOFLOW\SECUREPHP
                     elseif(is_object($arg)) $params[] = 'Object('.get_class($arg).')';
                     elseif(is_string($arg))
                         {
-                        if(strlen($arg) > 10) $params[] = "'" . substr($arg, 0, 5) . " .. " . substr($arg, -5) ."'";
+                        if(strlen($arg) > 10) $params[] = "'" . substr($arg, 0, 10) . "..'";
                         else $params[] = (string) "'$arg'";
                         }
                     elseif(is_numeric($arg)) $params[] = (int) $arg;

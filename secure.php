@@ -900,7 +900,15 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function get_script_name()
             {
-            return basename(get_included_files()[0]);
+            return basename($this->get_script_path());
+            }
+
+        /**
+         * @return string
+         */
+        final public function get_script_path()
+            {
+            return get_included_files()[0];
             }
 
         /**
@@ -1313,7 +1321,7 @@ namespace AUTOFLOW\SECUREPHP
             // when reporting turned off.
             if(SECUREPHP_HANDLE_OFF == PROTECT::getInstance()->handle())
                 {
-                return;
+                return false;
                 }
             // error handling.
             else
@@ -1321,8 +1329,9 @@ namespace AUTOFLOW\SECUREPHP
 
                 // Error handling (strict or loose)
 
-                $error = new \Error($this->get_php_error($error_level)[0] . ' ' . $error_message, NULL, $error_level, $error_file, $error_line);
-                $error->set_status('Das Skript wird ' . (!error_reporting() ? 'mittels @ fortgeführt' : ($this->get_php_error($error_level)[1] ? 'abgebrochen (Strict-Mode).' : 'nicht abgebrochen (Loose-Mode)')));
+                $error = new \PhpError($error_message, NULL, $error_level, $error_file, $error_line);
+                $error->set_note($this->get_php_error($error_level)[0]);
+                $error->set_state(CONFIG::getInstance()->_('script run') . (!error_reporting() ? CONFIG::getInstance()->_('continued') . '(@)' : (SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode() ? CONFIG::getInstance()->_('terminates') . ' (Strict-Mode).' : CONFIG::getInstance()->_('continues') . ' (Loose-Mode)')));
 
                 // Supressed by @
                 if ((error_reporting() & $error_level)) switch ($error_level)
@@ -1352,7 +1361,7 @@ namespace AUTOFLOW\SECUREPHP
                             || preg_match('/simplexml_load_file().*/', $error_message)
                         )
                             {
-                            $error->set_status('Das Skript wurde durch eine Sonderbehandlung nicht abgebrochen!');
+                            $error->set_state('Das Skript wurde durch eine Sonderbehandlung nicht abgebrochen!');
                             $error->send_to('log');
                             $error->raise();
                             return true;
@@ -1497,13 +1506,15 @@ namespace AUTOFLOW\SECUREPHP
                 case E_COMPILE_WARNING:
                 case E_PARSE:
                 case E_STRICT;
-                    $error = new \ShutdownError('Es ist ein Laufzeitfehler vom Typ ' . $this->get_php_error($lasterror['type'])[0] . ' aufgetreten.', 0,$lasterror['type'], $lasterror['file'], $lasterror['line']);
-                    $error->set_note($lasterror['message']);
+                    $error = new \ShutdownError($lasterror['message'], 0, $lasterror['type'], $lasterror['file'], $lasterror['line']);
+                    $error->set_note($this->get_php_error($lasterror['type'])[0]);
+                    $error->set_state(CONFIG::getInstance()->_('script aborted before'));
                     $error->raise();
                     break;
                 default:
-                    $error = new \ShutdownError('Es ist ein Laufzeitfehler vom Typ ' . $this->get_php_error($lasterror['type'])[0] . '  aufgetreten.', 0, $lasterror['type'], $lasterror['file'], $lasterror['line']);
-                    $error->set_note($lasterror['message']);
+                    $error = new \ShutdownError($lasterror['message'], 0, $lasterror['type'], $lasterror['file'], $lasterror['line']);
+                    $error->set_note($this->get_php_error($lasterror['type'])[0]);
+                    $error->set_state(CONFIG::getInstance()->_('script aborted before'));
                     $error->raise();
                     break;
                 }
@@ -1511,7 +1522,7 @@ namespace AUTOFLOW\SECUREPHP
             // EOF error
             if (false === $this->is_eof())
                 {
-                $error = new \EofError("Die Datei hat das Programmende nicht erreicht.", 0, NULL, __FILE__, __LINE__);
+                $error = new \EofError(CONFIG::getInstance()->_('eof error'));
                 $error->send_to('admin>user,log');
                 $error->raise();
                 }
@@ -1830,7 +1841,7 @@ namespace AUTOFLOW\SECUREPHP
         /**
          * @var string
          */
-        protected $locale = "en";
+        protected $locale = "en_EN";
         /**
          * @var int
          */
@@ -1955,6 +1966,28 @@ namespace AUTOFLOW\SECUREPHP
 
 
         /**
+         * @param string $token
+         * @param null $language
+         * @param array $args
+         * @return string
+         */
+        final public function _($token, $language = 'en_EN', $args=ARRAY())
+            {
+            $language = $this->locale;
+            $result = DB::getInstance()->server->query("SELECT * FROM translations WHERE token = '$token'");
+            $row = $result->fetchArray();
+            if(empty($row) || empty($row[$language]))
+                {
+                return $token;
+                }
+            elseif(count($args))
+                {
+                return vsprintf($row[$language], $args);
+                }
+            else return $row[$language];
+            }
+
+        /**
          * @param string $name
          * @return bool
          */
@@ -1975,6 +2008,21 @@ namespace AUTOFLOW\SECUREPHP
         final public function timeout($timeout)
             {
             if(false == (TIMEOUT::getInstance()->set_timeout($timeout)))
+                {
+                $this->config_error = TIMEOUT::getInstance()->get_error();
+                $this->terminate($this->config_error);
+                }
+            else return true;
+            }
+
+        /**
+         * @param int $timeout
+         * @return bool
+         * @throws \Exception
+         */
+        final public function reminder($timeout)
+            {
+            if(false == (TIMEOUT::getInstance()->set_reminder($timeout)))
                 {
                 $this->config_error = TIMEOUT::getInstance()->get_error();
                 $this->terminate($this->config_error);
@@ -2055,7 +2103,6 @@ namespace AUTOFLOW\SECUREPHP
             }
 
 
-
         /**
          * @param null $bool
          * @return bool
@@ -2088,8 +2135,9 @@ namespace AUTOFLOW\SECUREPHP
                 BOOTSTRAP::$date = '\J\a\n\u\a\r\y 1, 1970';
                 return true;
                 }
-            elseif('de' == strtolower($env))
+            elseif('de' == substr(strtolower($env), 0, 2))
                 {
+                $this->locale = "de_DE";
                 return true;
                 }
             else return;
@@ -2238,7 +2286,7 @@ namespace AUTOFLOW\SECUREPHP
             $message .= '* ' . get_class($e) . SECUREPHP_LINE_BREAK;
             $message .= '* ' . date(BOOTSTRAP::$date) . SECUREPHP_LINE_BREAK;
             $message .= '*' . SECUREPHP_NEW_LINE;
-            $message .= '* betroffene Anwendung: ' . PROTECT::getInstance()->get_app() . SECUREPHP_LINE_BREAK;
+            $message .= '* ' . CONFIG::getInstance()->_('concerned') . ': ' . PROTECT::getInstance()->get_app() . SECUREPHP_LINE_BREAK;
             $message .= '*' . SECUREPHP_NEW_LINE;
             $message .= $e->__toString();
             $message .= '*' . SECUREPHP_LINE_BREAK . '*/';
@@ -2741,6 +2789,11 @@ namespace AUTOFLOW\SECUREPHP
         private $timeout        = NULL;
 
         /**
+         * @var int|NULL
+         */
+        private $reminder       = NULL;
+
+        /**
          * @var bool|\Exception
          */
         private $error          = false;
@@ -2792,7 +2845,7 @@ namespace AUTOFLOW\SECUREPHP
                 {
                 while($row = $result->fetchArray())
                     {
-                    $this->data[$row['key']] = ARRAY($row['lasttime'],$row['attempts'],$row['warning'],$row['file'],$row['line'],$row['timeout'],$row['reminder'],$row['message']);
+                    $this->data[$row['id']] = ARRAY($row['lasttime'],$row['attempts'],$row['warning'],$row['file'],$row['line'],$row['timeout'],$row['reminder'],$row['message'],$row['key'],$row['id']);
                     }
                 }
 
@@ -2821,10 +2874,10 @@ namespace AUTOFLOW\SECUREPHP
         final public function check(\Exception $e, $timeout=NULL)
             {
 
-            $starttime = BOOTSTRAP::$starttime;
-            $file = $e->getFile();
-            $line = $e->getLine();
-            $message = $e->getMessage();
+            $message    = $e->getMessage();
+            $starttime  = BOOTSTRAP::$starttime;
+            $file       = BOOTSTRAP::getInstance()->get_script_path();
+            $line       = $e->getLine();
 
             // Wenn ein Fehler in der TIMEOUT-Klasse vorliegt sende keine Emails!
             #if($this->flag_error) return false;
@@ -2848,6 +2901,11 @@ namespace AUTOFLOW\SECUREPHP
                 return true;
                 }
 
+            // Reminder festlegen
+            if($reminder = $this->get_reminder());
+            else $reminder = 60 * 30;
+
+
             if(false == $this->clear())
                 {
                 error_log('Fehler beim Löschen der Timer-Db');
@@ -2870,7 +2928,7 @@ namespace AUTOFLOW\SECUREPHP
                 }
 
             // Noch kein Eintrag in DB vorhanden
-            if(empty($this->data) || !array_key_exists($key, $this->data))
+            if(empty($this->data) || !$data = $this->select($key, $file))
                 {
 
                 // Zeitstempel wie folgt
@@ -2882,22 +2940,25 @@ namespace AUTOFLOW\SECUREPHP
                 // [5] = timeout (Speichert den individuellen Timeout) @TODO
                 // [6] = reminder (individueller Reminder) @TODO
                 // [7] = message
+                // [8] = key
+                // [9] = id
 
-                $this->add($key, $starttime, 0, 0, "", "", "", "", $message);
+                $this->add($key, $starttime, 0, 0, $file, 0, $timeout, $reminder, $message);
 
                 return true;
                 }
 
             // Es existiert ein Eintrag.
             // Prüfen ob Wiederholungsfehler oder nicht.
+
             else
                 {
-
-                $data = $this->data[$key];
 
                 $lasttime = $data[0];
                 $attempts = $data[1];
                 $warning = $data[2];
+                $reminder = $data[6];
+                $id = $data[9];
 
                 // Der Timeout ist noch nicht abgelaufen.
                 // Es handelt sich um den selben Fehler im selben Prozess.
@@ -2920,7 +2981,7 @@ namespace AUTOFLOW\SECUREPHP
                             {
                             // Erster Wiederholungsfehler.
                             // Sende eine Nachricht über Dauerfehler.
-                            $report = new \TimerAlert('Wiederholungsfehler','Sie werden ab jetzt alle 30 Minuten über den Fehler informiert solange dieser weiterhin vorliegt.');
+                            $report = new \Reminder(CONFIG::getInstance()->_('reminder'),CONFIG::getInstance()->_('reminder status', false, array( $this->sec2min($reminder) )));
                             $report->send_to($e->get_send_to());
                             $report->params["md5"]      = $key;
                             $report->params["attempts"] = $attempts . " Wiederholungsfehler bisher";
@@ -2928,9 +2989,9 @@ namespace AUTOFLOW\SECUREPHP
                             $report->params["timeout"]  = $timeout . ' Sekunden';
                             $report->add($e);
 
-                            $this->data[$key][0] = $starttime;
-                            $this->data[$key][1]++;
-                            $this->data[$key][2] = $starttime;
+                            $this->data[$id][0] = $starttime;
+                            $this->data[$id][1]++;
+                            $this->data[$id][2] = $starttime;
                             $this->update();
 
                             return $report;
@@ -2939,20 +3000,21 @@ namespace AUTOFLOW\SECUREPHP
                             {
                             // weiterer Wiederholungsfehler
                             // Wenn 30 Minuten vorbei neue Erinnerung ..
-                            if($starttime - $warning > 60 * 30)
+                            if($starttime - $warning > $reminder)
                                 {
-                                $report = new \TimerAlert('Fehlererinnerung', 'Sie werden weiterhin alle 30 Minuten über den bestehenden Wiederholungsfehler informiert');
+                                $report = new \Reminder(CONFIG::getInstance()->_('reminder'), CONFIG::getInstance()->_('reminder status', false, array( $this->sec2min($reminder) )));
                                 $report->send_to($e->get_send_to());
                                 $report->params["md5"]          = $key;
-                                $report->params["attempts"]     = $attempts . ' Wiederholungsfehler bisher';
+                                $report->params["attempts"]     = $attempts;
                                 $report->params["lasttime"]     = date('d-M-Y H:i:s', $lasttime);
                                 $report->params["timestamp"]    = time();
-                                $report->params["timeout"]      = $timeout . ' Sekunden';
+                                $report->params["timeout"]      = $timeout;
+                                $report->params["reminder"]     = $reminder;
                                 $report->add($e);
 
-                                $this->data[$key][0] = $starttime;
-                                $this->data[$key][1]++;
-                                $this->data[$key][2] = $starttime;
+                                $this->data[$id][0] = $starttime;
+                                $this->data[$id][1]++;
+                                $this->data[$id][2] = $starttime;
                                 $this->update();
 
                                 return $report;
@@ -2960,8 +3022,8 @@ namespace AUTOFLOW\SECUREPHP
                             else
                                 {
                                 // Wiederholungsfehler nur verbuchen..
-                                $this->data[$key][0] = $starttime;
-                                $this->data[$key][1]++;
+                                $this->data[$id][0] = $starttime;
+                                $this->data[$id][1]++;
                                 $this->update();
                                 return false;
                                 }
@@ -2971,9 +3033,9 @@ namespace AUTOFLOW\SECUREPHP
                     // Dieser Zustand wird durch clear() hergestellt durch löschen alter Einträge ..
                     elseif($starttime - $lasttime >= $timeout * SECUREPHP_TIMEOUT + 1)
                         {
-                        $this->data[$key][0] = $starttime;
-                        $this->data[$key][1] = 0;
-                        $this->data[$key][2] = 0;
+                        $this->data[$id][0] = $starttime;
+                        $this->data[$id][1] = 0;
+                        $this->data[$id][2] = 0;
                         $this->update();
                         return true;
                         }
@@ -2997,9 +3059,8 @@ namespace AUTOFLOW\SECUREPHP
                 $statement->bindValue(':message', $message);
                 $statement->execute();
 
-                #echo $this->db->lastErrorMsg();
+                return $this->db->lastInsertRowID();
 
-                return true;
                 }
             catch(\Exception $e)
                 {
@@ -3013,9 +3074,9 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function update()
             {
-            foreach($this->data AS $key=>$row)
+            foreach($this->data AS $id=>$row)
                 {
-                $statement = DB::getInstance()->server->prepare("UPDATE timeout SET lasttime = :lasttime, attempts = :attempts, warning = :warning, file = :file, line = :line, timeout = :timeout, reminder = :reminder, message = :message WHERE key = :key");
+                $statement = DB::getInstance()->server->prepare("UPDATE timeout SET lasttime = :lasttime, attempts = :attempts, warning = :warning, file = :file, line = :line, timeout = :timeout, reminder = :reminder, message = :message WHERE id = :id");
 
                 $statement->bindValue(':lasttime', $row[0]);
                 $statement->bindValue(':attempts', $row[1]);
@@ -3025,7 +3086,7 @@ namespace AUTOFLOW\SECUREPHP
                 $statement->bindValue(':timeout', $row[5]);
                 $statement->bindValue(':reminder', $row[6]);
                 $statement->bindValue(':message', $row[7]);
-                $statement->bindValue(':key', $key);
+                $statement->bindValue(':id', $id);
                 $statement->execute();
                 #echo $this->db->lastErrorMsg();
                 }
@@ -3040,26 +3101,51 @@ namespace AUTOFLOW\SECUREPHP
             if(empty($this->data)) return true;
             else
                 {
-                foreach($this->data AS $key=>$value)
+                foreach($this->data AS $id=>$value)
                     {
                     $lasttime = $value[0];
-                    $timeout = $lasttime + ($this->timeout * SECUREPHP_TIMEOUT);
+                    $timeout = $value[5];
+                    $timeout = $lasttime + ($timeout * SECUREPHP_TIMEOUT);
                     if($timeout < BOOTSTRAP::$starttime)
                         {
-                        $_data[] = $key;
+                        $_data[] = $id;
                         }
                     }
                 if(isset($_data))
                     {
-                    foreach($_data AS $key)
+                    foreach($_data AS $id)
                         {
-                        unset($this->data[$key]);
-                        DB::getInstance()->server->exec("DELETE FROM timeout WHERE key = '$key'");
+                        unset($this->data[$id]);
+                        DB::getInstance()->server->exec("DELETE FROM timeout WHERE id = '$id'");
                         return true;
                         }
                     }
                 else return true;
                 }
+            }
+
+        /**
+         * @param string $key
+         * @param string $file
+         * @return array
+         */
+        final protected function select($key, $file)
+            {
+            $a = $this->data;
+            $b = array_map(function($row) use ($key, $file)
+                {
+                if($row[8] == $key AND $row[3] == $file) return $row;
+                }, $a);
+            return array_shift($b);
+            }
+
+        /**
+         * @param int $sec
+         * @return string
+         */
+        final public function sec2min($sec)
+            {
+            return floor($sec/60)." min:".($sec%60)." secs";
             }
 
         /**
@@ -3139,6 +3225,32 @@ namespace AUTOFLOW\SECUREPHP
             return $this->timeout;
             }
 
+        /**
+         * @param int $timeout
+         * @return NULL|int
+         */
+        final public function set_reminder($timeout)
+            {
+            if(!is_int($timeout))
+                {
+                $this->set_error(new \CONFIGERROR('ungültiger Integer-Wert für Reminder übergeben'));
+                return false;
+                }
+            else
+                {
+                $this->reminder = $timeout;
+                return true;
+                }
+            }
+
+        /**
+         * @return int | NULL
+         */
+        final public function get_reminder()
+            {
+            return $this->reminder;
+            }
+
         } // final class TIMEOUT
 
     /**
@@ -3197,8 +3309,8 @@ namespace AUTOFLOW\SECUREPHP
         final public function init()
             {
             if($this->is_ready()) return true;
-            elseif(!$db = pathinfo(BOOTSTRAP::getInstance()->get_script_name(), PATHINFO_FILENAME) . '.sqlite');
-            elseif(!file_exists($db) AND false == $this->createdb())
+            elseif(!$db = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'securephp.sqlite');
+            elseif(!file_exists($db))
                 {
                 $this->set_init_error(new E_INIT('konnte ' . SECUREPHP . '-Datenbank nicht erstellen.', false, $this->get_init_error()));
                 return false;
@@ -3251,20 +3363,6 @@ namespace AUTOFLOW\SECUREPHP
         final public function get_init_error()
             {
             return $this->init_error;
-            }
-
-        /**
-         * Copy default database to destination.
-         * @return bool
-         */
-        final protected function createdb()
-            {
-            if(false == copy(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'securephp.sqlite', pathinfo(BOOTSTRAP::getInstance()->get_script_name(), PATHINFO_FILENAME) . '.sqlite'))
-                {
-                $this->set_init_error(new E_INIT('konnte ' . SECUREPHP . '-Datenbank nicht kopieren.', false));
-                return false;
-                }
-            else return true;
             }
 
         } // final class DB

@@ -1,16 +1,22 @@
-## PHP error mailer and replacement for error-, exception- and shutdown handler.
+## SecurePHP - error mailer and runtime sensitizing
 
-* predefined error reports
-  - error tickets
-  - config errors
-  - info & notice reports
-  - init errors
+### Delivers:
+
+* predefined error reports based on exceptions
+  - [error tickets](doc/errorticket.md)
+  - [config errors](doc/configerror.md)
+  - [batch reports](doc/batchreport.md)
+  - [info & notice reports](doc/inforeports.md)
+  - init error reports
   - success reports
   - timer alerts
-  - transaction & transition errors
-  - uncaught exception errors
+  - transaction & transition reports
+  - uncaught exception reports
+  - [..]
+  - easily sent by email, to STDERR or to log
+  
 
-* send errors to email inboxes
+* [send errors to email inboxes](doc/email_basisc.md)
   - send to admin
   - send to users
   - send to cc
@@ -20,22 +26,23 @@
   - catch undefined variables, indexes and offsets
   - […]
   
-* catch recurring errors
-  - inform about repetitives errors (ie. every 30 minutes)
+* catch recurring errors](doc/timeout.md)
+  - [inform about repetitives errors](doc/timeout.md) (ie. every 30 minutes)
   - optimized for cronjobs
 
 * loose mode
-  - handle errors as PHP does
+  - [handle errors as PHP does](doc/loose.md)
 
 * EOF detection
-  - get informed when PHP doesn't reach the end of file
+  - [get informed when PHP doesn't reach the end of file](doc/eof.md)
 
 * user defined shutdown function
-  - set your own shutdown function
+  - [set your own shutdown function](doc/shutdown_function.md)
 
-## Usage:
+## Usage
 
-include securephp.php and get a new instance ..
+include secure.php in your project and get a fresh instance ..
+
 ```php
 require_once('vendor/autoflow/securephp/secure.php');
 $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
