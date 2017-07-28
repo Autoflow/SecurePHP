@@ -20,8 +20,8 @@ try
     // cronjob starts every 5 minutes
     $mysecure->config->timeout(5 * 60);
 
-    // focus and catch recurring errors every 30 minutes and
-    // send them by TimerAlert (reminder) to admins email inbox.
+    // bundle and catch recurring errors every 30 minutes and
+    // send them by Reminder report to admins email inbox.
     $mysecure->config->reminder(30 * 60);
 
      // try to create pdo object
