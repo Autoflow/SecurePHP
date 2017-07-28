@@ -270,42 +270,6 @@ namespace
 
 
         /**
-         * @param int|null $timeout
-         * @return void
-         * @throws \Exception
-         */
-        final public function raise($timeout = NULL)
-            {
-
-            if(true == $this->has_raised())
-                {
-                return NULL;
-                }
-            elseif(false == defined('SECUREPHP'))
-                {
-                throw new \AUTOFLOW\SECUREPHP\E_CONFIG('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' steht nicht zur Verfügung um diesen Fehlerbericht zu versenden.', NULL, $this);
-                }
-            elseif(false == \AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance())
-                {
-                throw new \AUTOFLOW\SECUREPHP\E_INIT('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' ist nicht initialisiert.', NULL, $this);
-                }
-            elseif(true == \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->in_progress())
-                {
-                // @todo U.u. diese Recursion erlauben um Berichte innerhalb eines
-                // Berichtes freizugeben. Vorher prüfen auf Richtigkeit, z.B. E_FATAL
-                throw new \AUTOFLOW\SECUREPHP\E_FATAL('RAISE_RECURSION',NULL, $this);
-                }
-            else
-                {
-                \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->in_progress(true);
-                if(NULL === $timeout) $timeout = $this->get_timeout();
-                \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->notify($this->get_send_to(), $this, $timeout);
-                \AUTOFLOW\SECUREPHP\PROTECT::getInstance()->in_progress(false);
-                $this->has_raised(true);
-                }
-            }
-
-        /**
          * @param null $flag
          * @return bool
          */
