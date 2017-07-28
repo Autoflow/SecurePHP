@@ -42,6 +42,7 @@
 ## Usage
 
 include secure.php in your project and get a fresh instance ..
+
 ```php
 require_once('vendor/autoflow/securephp/secure.php');
 $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
