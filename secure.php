@@ -1968,9 +1968,10 @@ namespace AUTOFLOW\SECUREPHP
         /**
          * @param string $token
          * @param null $language
+         * @param array $args
          * @return string
          */
-        final public function _($token, $language = 'en_EN')
+        final public function _($token, $language = 'en_EN', $args=ARRAY())
             {
             $language = $this->locale;
             $result = DB::getInstance()->server->query("SELECT * FROM translations WHERE token = '$token'");
@@ -1979,10 +1980,11 @@ namespace AUTOFLOW\SECUREPHP
                 {
                 return $token;
                 }
-            else
+            elseif(count($args))
                 {
-                return $row[$language];
+                return vsprintf($row[$language], $args);
                 }
+            else return $row[$language];
             }
 
         /**
@@ -2979,7 +2981,7 @@ namespace AUTOFLOW\SECUREPHP
                             {
                             // Erster Wiederholungsfehler.
                             // Sende eine Nachricht über Dauerfehler.
-                            $report = new \TimerAlert('Wiederholungsfehler','Sie werden ab jetzt alle 30 Minuten über den Fehler informiert solange dieser weiterhin vorliegt.');
+                            $report = new \Reminder(CONFIG::getInstance()->_('reminder'),CONFIG::getInstance()->_('reminder status', false, array( $this->sec2min($reminder) )));
                             $report->send_to($e->get_send_to());
                             $report->params["md5"]      = $key;
                             $report->params["attempts"] = $attempts . " Wiederholungsfehler bisher";
@@ -3000,13 +3002,14 @@ namespace AUTOFLOW\SECUREPHP
                             // Wenn 30 Minuten vorbei neue Erinnerung ..
                             if($starttime - $warning > $reminder)
                                 {
-                                $report = new \TimerAlert('Fehlererinnerung', 'Sie werden weiterhin alle 30 Minuten über den bestehenden Wiederholungsfehler informiert');
+                                $report = new \Reminder(CONFIG::getInstance()->_('reminder'), CONFIG::getInstance()->_('reminder status', false, array( $this->sec2min($reminder) )));
                                 $report->send_to($e->get_send_to());
                                 $report->params["md5"]          = $key;
-                                $report->params["attempts"]     = $attempts . ' Wiederholungsfehler bisher';
+                                $report->params["attempts"]     = $attempts;
                                 $report->params["lasttime"]     = date('d-M-Y H:i:s', $lasttime);
                                 $report->params["timestamp"]    = time();
-                                $report->params["timeout"]      = $timeout . ' Sekunden';
+                                $report->params["timeout"]      = $timeout;
+                                $report->params["reminder"]     = $reminder;
                                 $report->add($e);
 
                                 $this->data[$id][0] = $starttime;
@@ -3142,7 +3145,7 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function sec2min($sec)
             {
-            return floor($sec/60)."min:".($sec%60)."secs";
+            return floor($sec/60)." min:".($sec%60)." secs";
             }
 
         /**
