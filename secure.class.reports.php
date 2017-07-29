@@ -1,21 +1,13 @@
 <?php
 
-// Version 2.0, 24.10.2016
-# @todo: vielleicht Klasse "Ticket" als Basis für ErrorTicket und SuccessTicket
-# 1) ErrorTicket::description geändert zu ErrorTicket::status
-# 2) ErrorTicket::error geändert zu ErrorTicket::description
-# 3) added static class ErrorInfo{}
-# 4) ErrorTicket::description entfernt, wird von ErrorTicket::note abgelöst
-
-// Version 1.0
-# 1) Initial release, no info
-
-
 /**
  * @package SECUREPHP
  * @author Alexander Münch
  * @copyright Alexander Münch
  * @version 2.0
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace

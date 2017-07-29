@@ -1,32 +1,14 @@
 <?php
 
-// Version 2.0, 24.10.2016
-# 1) Initial release, no info
-
 /**
- * Base package for SecurePHP reports and exceptions.
- *
- * Don't use this classed directly in code.
- *
- * \ErrorException
- *  -> \SECUREPHP\ERROR_EXCEPTION
- *     -> i.e. \SECUREPHP\PhpRunTimeError
- *
- * \Exceptions
- *  -> \SecurePHP\EXCEPTION
- *     -> \SecurePHP\E_FATAL
- *        -> \SecurePHP\E_ACCESS
- *        -> \SecurePHP\E_RECURSION
- *        -> \SecurePHP\E_INIT
- *        -> \SecurePHP\E_CONFLICT
- *     -> \SecurePHP\E_CONFIG
- *     -> ie. \SECUREPHP\ERRORTICKET
- *     -> ie. \SecurePHP\ERRORREPORT
  *
  * @package SECUREPHP
  * @author Alexander Münch
  * @copyright Alexander Münch
  * @version 1.1
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace AUTOFLOW\SECUREPHP
