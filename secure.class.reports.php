@@ -125,17 +125,17 @@ namespace
                 }
             elseif(false == defined('SECUREPHP'))
                 {
-                throw new SECUREPHP\E_CONFIG('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' steht nicht zur Verfügung um diesen Fehlerbericht zu versenden.', NULL, $this);
+                throw new Exception('sending report failed due to missing installation. reporting library is not available', false, $this);
                 }
             elseif(false == SECUREPHP\BOOTSTRAP::getInstance())
                 {
-                throw new SECUREPHP\E_INIT('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' ist nicht initialisiert.', NULL, $this);
+                throw new Exception('sending report failed due to missing initialisation. could not initialise report library', NULL, $this);
                 }
             elseif(true == SECUREPHP\PROTECT::getInstance()->in_progress())
                 {
                 // @todo U.u. diese Recursion erlauben um Berichte innerhalb eines
                 // Berichtes freizugeben. Vorher prüfen auf Richtigkeit, z.B. E_FATAL
-                throw new SECUREPHP\E_FATAL('Internal ' . SECUREPHP . ' error', NULL, $this);
+                throw new SECUREPHP\E_FATAL('Internal report library error', NULL, $this);
                 }
             else
                 {
