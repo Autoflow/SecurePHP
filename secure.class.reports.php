@@ -632,7 +632,7 @@ namespace
                             break;
                             }
                         elseif('log' == $name);
-                        elseif($_email = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_user_email($name))
+                        elseif($_email = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_cc_mail($name))
                             {
                             $_recipients[] = $name . ' ['.$_email.']';
                             break;
@@ -652,7 +652,7 @@ namespace
                     elseif('log' == $user);
                     else
                         {
-                        $_recipients[] = $user . ' [' .AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_user_email($user) .']';
+                        $_recipients[] = $user . ' [' .AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_cc_mail($user) .']';
                         }
                     }
                 }

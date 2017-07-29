@@ -2725,7 +2725,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param string $name
          * @return bool
          */
-        public function get_cc_email($name)
+        public function get_cc_mail($name)
             {
             if('users' == $name || 'admin' == $name || 'log' == $name)
                 {
