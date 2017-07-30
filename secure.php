@@ -24,7 +24,7 @@
  * $error = new ErrorTicket('Fehlerbeschreibung', 'Statusbeschreibung');
  * $error->set_error('exakte Fehlerursache');
  * $error->send_to('admin>user', log); # Reihenfolge der Zustellung festlegen
- * $error->raise(); # versendet den Fehlerbericht
+ * $error->send(); # versendet den Fehlerbericht
  *
  * Im obigen Beispiel wird ein allgemeines Fehlerticket mit Fehlerbeschreibung,
  * Statusinformation und Fehlerursache erstellt. Das Ticket wird per Email an
@@ -636,8 +636,8 @@ namespace AUTOFLOW\SECUREPHP
                 }
             elseif(true == (bool)$flag)
                 {
-                ini_set('display_errors', true);
-                ini_set('log_errors', true);
+                ini_set('display_errors', 1);
+                ini_set('log_errors', 1);
                 $restore_handle = PROTECT::getInstance()->handle();
                 PROTECT::getInstance()->handle(SECUREPHP_HANDLE_DEBUG);
                 return true;
@@ -1331,7 +1331,21 @@ namespace AUTOFLOW\SECUREPHP
 
                 $error = new \PhpError($error_message, NULL, $error_level, $error_file, $error_line);
                 $error->set_note($this->get_php_error($error_level)[0]);
-                $error->set_state(CONFIG::getInstance()->_('script run') . (!error_reporting() ? CONFIG::getInstance()->_('continued') . '(@)' : (SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode() ? CONFIG::getInstance()->_('terminates') . ' (Strict-Mode).' : CONFIG::getInstance()->_('continues') . ' (Loose-Mode)')));
+
+                $exit = 0;
+                if(SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode()) $mode = 'Strict-Mode';
+                else $mode = "Loose-Mode";
+
+                if(SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode())
+                    {
+                    if (SECUREPHP_EXIT_ON_ERROR == $this->get_php_error($error_level)[1]) $exit = 1;
+                    }
+                // else handle exit in loose mode
+                elseif(SECUREPHP_HANDLE_LOOSE == PROTECT::getInstance()->mode())
+                    {
+                    if (SECUREPHP_EXIT_ON_ERROR == $this->get_php_error($error_level)[2]) $exit = 1;
+                    }
+                $error->set_state(CONFIG::getInstance()->_('script run') . (!error_reporting() ? CONFIG::getInstance()->_('continued') . '(@)' : ($exit ? CONFIG::getInstance()->_('terminates') . ' ('.$mode.').' : CONFIG::getInstance()->_('continues') . ' ('.$mode.')')));
 
                 // Supressed by @
                 if ((error_reporting() & $error_level)) switch ($error_level)
@@ -1426,29 +1440,29 @@ namespace AUTOFLOW\SECUREPHP
          * Shutdown-Handler.
          * @todo Überprüfen inwiefern secure.php mit weiteren Shutdown-Handlern in die Quere kommt.
          *
-         * @todo testen ob error_handler -> shutdown_handler -> E_NOTICE wieder zu error_handler zurückkehrt.
-         *
          * Dieser Shutdown-Handler wird immer ausgeführt, auch
          * wenn exit() in error_handler() aufgerufen wird.
          *
-         * Fehler wie E_WARNINGS die hier enstehen werden an error_handler() zurückgegeben wenn error_handler() selbst nicht durch das Skript im Vorfeld aktiv war.
+         * Fehler wie E_WARNINGS die hier enstehen werden an error_handler() zurückgegeben wenn error_handler()
+         * selbst nicht durch das Skript im Vorfeld aktiv war.
          *
          * Fatal-Errors die hier enstehen sind nicht manuell abfangbar.
          *
          * The error_get_last() function will give you the most recent error even when that error is a Fatal error.
          *
-         * If an error handler (see set_error_handler ) successfully handles an error then that error will not be reported by this function.
+         * If an error handler (see set_error_handler ) successfully handles an error then that error will not be
+         * reported by this function.
          *
-         * error_get_last() is an array with all the information regarding the fatal error that you should need to debug, though it will not have a backtrace, as has been mentioned.
+         * error_get_last() is an array with all the information regarding the fatal error that you should need
+         * to debug, though it will not have a backtrace, as has been mentioned.
          *
-         * You may get the idea to call debug_backtrace or debug_print_backtrace from inside a shutdown function, to trace where a fatal error occurred. Unfortunately, these functions will not work inside a shutdown function.
+         * You may get the idea to call debug_backtrace or debug_print_backtrace from inside a shutdown function,
+         * to trace where a fatal error occurred. Unfortunately, these functions will not work inside a
+         * shutdown function.
          *
          * Wird immer vor __desctruct() aufgerufen.
          *
-         *
-         *
          * @return void
-         * @throws E_RECURSION
          */
         final public function shutdown_handler()
 			{
@@ -1470,27 +1484,12 @@ namespace AUTOFLOW\SECUREPHP
                 var_dump($lasterror);
                 }
 
-            #header("HTTP/1.0 500 Service not available");
-            #include_once('500.php');
-
-
             // Shutdown-Funktion ausführen.
             if (false === $this->is_eof() && is_object(CONFIG::getInstance()->shutdown_function))
                 {
                 $shutdown_function = CONFIG::getInstance()->shutdown_function->bindto($this);
                 $shutdown_function();
                 }
-
-            // Recursion detection.
-            /** if($this->in_progress())
-                {
-                // Diese Exception wird direkt abgefangen.
-                // Recursion von exception_handler() durch Aufruf ist nicht gegeben.
-                $e = new E_FATAL('SHUTDOWNHANDLER: raise not finished. Das Skript wird beendet.');
-                $this->terminate($e);
-                }
-            // Deactivated.
-            else  */
 
             // Arbeitsverzeichnis wiederherstellen
             chdir(BOOTSTRAP::getInstance()->get_wd());
@@ -1689,7 +1688,7 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function notify_user(\Exception $e)
             {
-            return MAIL::getInstance()->raise('user', $e);
+            return MAIL::getInstance()->send('user', $e);
             }
 
         /**
@@ -1698,7 +1697,7 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function notify_admin(\Exception $e)
             {
-            return MAIL::getInstance()->raise('admin', $e);
+            return MAIL::getInstance()->send('admin', $e);
             }
 
         /**
@@ -1708,7 +1707,7 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function notify_cc($user, \Exception $e)
             {
-            return MAIL::getInstance()->raise($user, $e);
+            return MAIL::getInstance()->send($user, $e);
             }
 
         // PROTECT GETTER & SETTER
@@ -2473,25 +2472,25 @@ namespace AUTOFLOW\SECUREPHP
          * @return bool;
          * @throws \Exception
          */
-        final public function raise($user, \Exception $e)
+        final public function send($user, \Exception $e)
             {
             if(SECUREPHP_HANDLE_MUTE == PROTECT::getInstance()->handle()) return NULL;
             elseif(false ==($data = MAIL::getInstance()->get_mail_data($e))) return false;
             elseif('admin' == $user)
                 {
                 if(empty($this->get_admin())) return NULL;
-                else return $this->send($this->get_admin(), $data->header, $data->message);
+                else return $this->forward($this->get_admin(), $data->header, $data->message);
                 }
             elseif('user' == $user)
                 {
                 if(empty($this->get_user())) return NULL;
-                else return $this->send($this->get_user(), $data->header, $data->message);
+                else return $this->forward($this->get_user(), $data->header, $data->message);
                 }
             elseif(false == ($mail = $this->get_cc_by_name($user)))
                 {
                 return false;
                 }
-            else return $this->send($mail, $data->header, $data->message);
+            else return $this->forward($mail, $data->header, $data->message);
 
             }
 
@@ -2502,7 +2501,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param string $from
          * @return bool|NULL
          */
-        public function send($to, $subject, $message, $from=NULL)
+        public function forward($to, $subject, $message, $from=NULL)
             {
 
             if(!empty($DEBUG)) return NULL;
@@ -2727,6 +2726,7 @@ namespace AUTOFLOW\SECUREPHP
          */
         public function get_cc_mail($name)
             {
+
             if('users' == $name || 'admin' == $name || 'log' == $name)
                 {
                 $this->set_error(new E_CONFIG($name . 'ist ein ungültiger Benutzername'));

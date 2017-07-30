@@ -117,17 +117,11 @@ namespace
                 }
             elseif(false == defined('SECUREPHP'))
                 {
-                throw new Exception('sending report failed due to missing installation. reporting library is not available', false, $this);
+                throw new Exception('sending report failed due to missing installation. report library is not available', false, $this);
                 }
             elseif(false == SECUREPHP\BOOTSTRAP::getInstance())
                 {
                 throw new Exception('sending report failed due to missing initialisation. could not initialise report library', NULL, $this);
-                }
-            elseif(true == SECUREPHP\PROTECT::getInstance()->in_progress())
-                {
-                // @todo U.u. diese Recursion erlauben um Berichte innerhalb eines
-                // Berichtes freizugeben. Vorher prüfen auf Richtigkeit, z.B. E_FATAL
-                throw new SECUREPHP\E_FATAL('Internal report library error', NULL, $this);
                 }
             else
                 {
@@ -597,16 +591,18 @@ namespace
          */
         final protected function get_mail_message_receipients()
             {
+
             $users = explode(',', $this->send_to);
             foreach($users AS $user)
                 {
                 $user = trim($user);
-                if('all' == $user AND "all" == $this->send_to) {
-                $_admins = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_admin();
-                $_users = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_user();
-                foreach(AUTOFLOW\SECUREPHP\MAIL::getInstance()->userlist AS $_user => $email) $_recipients[] = $_user . ' [' .$email. ']';
-                break;
-                }
+                if('all' == $user AND "all" == $this->send_to)
+                    {
+                    $_admins = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_admin();
+                    $_users = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_user();
+                    foreach(AUTOFLOW\SECUREPHP\MAIL::getInstance()->userlist AS $_user => $email) $_recipients[] = $_user . ' [' .$email. ']';
+                    break;
+                    }
                 elseif(strpos($user, '>'))
                     {
                     $_list = explode('>', $user);
@@ -1294,7 +1290,7 @@ namespace
         /**
          * @var string
          */
-        public $description = "runtime error";
+        public $description = "PHP runtime error";
 
         /**
          * @var bool
