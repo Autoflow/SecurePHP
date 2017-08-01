@@ -1,5 +1,5 @@
-###This is the default mode after initialising the SecurePHP libraray.
-The enviroment is set to
+### This is the default mode after initialising the SecurePHP libraray.
+The enviroment is set to:
 
 * mute
  - no errors will be reported except to log and email.
