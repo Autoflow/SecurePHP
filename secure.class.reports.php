@@ -739,6 +739,31 @@ namespace
         }
 
     /**
+     * Class UserTicket
+     * @inherit \ErrorTicket
+     */
+    class UserTicket extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description    = 'user info';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = false;
+
+        }
+
+    /**
      * Class SuccessTicket
      * @inherit \ErrorTicket
      */
@@ -786,6 +811,258 @@ namespace
             }
         }
 
+    /**
+     * Class Warning.
+     * @inherit \ErrorTicket
+     */
+    final class Warning extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'warning';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        }
+
+    /**
+     * Class Notice.
+     * @inherit \ErrorTicket
+     */
+    final class Notice extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'notice';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        }
+
+
+    /**
+     * Class ConfigError
+     * @inherit \ErrorTicket
+     */
+	final class ConfigError extends \ErrorTicket
+		{
+
+        // CONFIGERROR HEAD
+
+        /**
+         * @var string
+         */
+		public $description    = 'config error';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        /**
+         * @var string
+         */
+		public $config_file;
+
+        /**
+         * @var array[]
+         */
+		public $config_params;
+
+        // CONFIGERROR METHODS
+
+        /**
+         * @param string|null $notice
+         * @return string
+         */
+        final public function get_mail_message($notice=NULL)
+            {
+
+            $message = '';
+            $message .= 'Hinweise zur Konfiguration' . SECUREPHP_MAIL_EOL;
+            $message .= 'Möglicherweise sind die Verbindungsparameter nicht aktuell.' . SECUREPHP_MAIL_EOL;
+            $message .= 'Hinweise zur manuellen Änderung finden sie im Folgenden:' . SECUREPHP_MAIL_EOL;
+            $message .= 'Konfigurationsdatei: ' . ($this->config_file?:'Wert nicht angegeben') . SECUREPHP_MAIL_EOL;
+            $message .= 'aktuelle Konfigurationsparameter: ';
+            if( count($this->config_params) > 0 )
+                {
+                $count = 1;
+                $message .= SECUREPHP_MAIL_EOL;
+                foreach($this->config_params AS $name => $value)
+                    {
+                    $message .= $count .') '.$name .': '.(string) $value . SECUREPHP_MAIL_EOL;
+                    $count++;
+                    }
+                }
+            else
+                {
+                $message .= 'nicht vorhanden' . SECUREPHP_MAIL_EOL;
+                }
+            return parent::get_mail_message($message);
+            }
+
+        // GETTERS & SETTERS
+
+        /**
+         * @param string $file
+         * @return bool
+         */
+        public function set_config_file($file)
+			{
+			$this->config_file = $file;
+            return true;
+			}
+
+		}
+
+
+
+    /**
+     * Class InitError.
+     *
+     * Verbindungsfehler etc.
+     * Definiert allgemeine Fehler, die in der
+     * Prüfschleife, vor der Verarbeitungsschleife,
+     * auftreten.
+     *
+     * @inherit \ErrorTicket
+     */
+	final class InitError extends \ErrorTicket
+
+		{
+
+        /**
+         * @var string
+         */
+		public $description = 'init error';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin>user,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+		}
+
+    /**
+     * Class TransitionError.
+     *
+     * Fehler bei Übergängen.
+     * Z.B. Verzeichniswechsel oder Statusübergänge.
+     * Auch Updatefehler bei Datenbanken.
+     *
+     * @inherit \ErrorTicket
+     */
+    final class TransitionError extends \ErrorTicket
+
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'transition error';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user>admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        }
+
+    /**
+     * Class TransactionError.
+     * @inherit \ErrorTicket
+     */
+    final class TransactionError extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'transaction error';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user>admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        }
+
+    /**
+     * Class TimerAlert
+     * @inherit \ErrorReport
+     */
+	final class Reminder extends \ErrorReport
+		{
+
+        /**
+         * @var string
+         */
+		public $description = 'reminder alert';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin>user,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = false;
+
+		}
+
+
+    /**
+     * Class BatchReport
+     * @inherit \ErrorTicket
+     */
     class BatchReport extends \ErrorTicket
         {
         /**
@@ -1050,326 +1327,6 @@ namespace
             }
         }
 
-    /**
-     * Class Warning.
-     * @inherit \ErrorTicket
-     */
-    final class Warning extends \ErrorTicket
-        {
-
-        /**
-         * @var string
-         */
-        public $description = 'warning';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "admin,log";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        }
-
-    /**
-     * Class UserWarning.
-     * @inherit \ErrorTicket
-     */
-    final class UserWarning extends \ErrorTicket
-        {
-
-        /**
-         * @var string
-         */
-        public $description = 'warning';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "user";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        }
-
-    /**
-     * Class Notice.
-     * @inherit \ErrorTicket
-     */
-    final class Notice extends \ErrorTicket
-        {
-
-        /**
-         * @var string
-         */
-        public $description = 'notice';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "admin,log";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        }
-
-    /**
-     * Class UserNotice.
-     * @inherit \ErrorTicket
-     */
-    final class UserNotice extends \ErrorTicket
-        {
-
-        /**
-         * @var string
-         */
-        public $description = 'notice';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "user";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        }
-
-    /**
-     * Class ConfigError
-     * @inherit \ErrorTicket
-     */
-	final class ConfigError extends \ErrorTicket
-		{
-
-        // CONFIGERROR HEAD
-
-        /**
-         * @var string
-         */
-		public $description    = 'config error';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "admin,log";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        /**
-         * @var string
-         */
-		public $config_file;
-
-        /**
-         * @var array[]
-         */
-		public $config_params;
-
-        // CONFIGERROR METHODS
-
-        /**
-         * @param string|null $notice
-         * @return string
-         */
-        final public function get_mail_message($notice=NULL)
-            {
-
-            $message = '';
-            $message .= 'Hinweise zur Konfiguration' . SECUREPHP_MAIL_EOL;
-            $message .= 'Möglicherweise sind die Verbindungsparameter nicht aktuell.' . SECUREPHP_MAIL_EOL;
-            $message .= 'Hinweise zur manuellen Änderung finden sie im Folgenden:' . SECUREPHP_MAIL_EOL;
-            $message .= 'Konfigurationsdatei: ' . ($this->config_file?:'Wert nicht angegeben') . SECUREPHP_MAIL_EOL;
-            $message .= 'aktuelle Konfigurationsparameter: ';
-            if( count($this->config_params) > 0 )
-                {
-                $count = 1;
-                $message .= SECUREPHP_MAIL_EOL;
-                foreach($this->config_params AS $name => $value)
-                    {
-                    $message .= $count .') '.$name .': '.(string) $value . SECUREPHP_MAIL_EOL;
-                    $count++;
-                    }
-                }
-            else
-                {
-                $message .= 'nicht vorhanden' . SECUREPHP_MAIL_EOL;
-                }
-            return parent::get_mail_message($message);
-            }
-
-        // GETTERS & SETTERS
-
-        /**
-         * @param string $file
-         * @return bool
-         */
-        public function set_config_file($file)
-			{
-			$this->config_file = $file;
-            return true;
-			}
-
-		}
-
-
-
-    /**
-     * Class InitError.
-     *
-     * Verbindungsfehler etc.
-     * Definiert allgemeine Fehler, die in der
-     * Prüfschleife, vor der Verarbeitungsschleife,
-     * auftreten.
-     *
-     * @inherit \ErrorTicket
-     */
-	final class InitError extends \ErrorTicket
-
-		{
-
-        /**
-         * @var string
-         */
-		public $description = 'init error';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "admin>user,log";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-		}
-
-    /**
-     * Class TransitionError.
-     *
-     * Fehler bei Übergängen.
-     * Z.B. Verzeichniswechsel oder Statusübergänge.
-     * Auch Updatefehler bei Datenbanken.
-     *
-     * @inherit \ErrorTicket
-     */
-    final class TransitionError extends \ErrorTicket
-
-        {
-
-        /**
-         * @var string
-         */
-        public $description = 'transition error';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "user>admin,log";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        }
-
-    /**
-     * Class TransactionError.
-     * @inherit \ErrorTicket
-     */
-    final class TransactionError extends \ErrorTicket
-        {
-
-        /**
-         * @var string
-         */
-        public $description = 'transaction error';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "user>admin,log";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        }
-
-    /**
-     * Class TimerAlert
-     * @inherit \ErrorReport
-     */
-	final class Reminder extends \ErrorReport
-		{
-
-        /**
-         * @var string
-         */
-		public $description = 'reminder alert';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "admin>user,log";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = false;
-
-		}
-
-    /**
-     * Class UncaughtException
-     * @inherit \ErrorTicket
-     */
-    final class UncaughtException extends \ErrorTicket
-        {
-
-        /**
-         * @var string
-         */
-        public $description = 'uncaught exception';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "admin,log";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = false;
-
-        }
 
     /**
      * Class Eof
@@ -1492,6 +1449,31 @@ namespace
          * @var bool
          */
         public $flag_details = false;
+
+        }
+
+    /**
+     * Class UncaughtException
+     * @inherit \ErrorTicket
+     */
+    final class UncaughtException extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'uncaught exception';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = false;
 
         }
 
