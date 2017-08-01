@@ -1,18 +1,11 @@
-### This is the [default](default.md) mode after initialising the SecurePHP libraray.
+### Strict mode is the [default](default.md) handling of php errors after initialising the SecurePHP libraray.
 
 The enviroment is set to:
 
-* mute
-    - no errors will be reported except to log and email.
-
-* strict
+* strict mode
     - E_WARNINGs and E_NOTICEs are turned to E_ERRORs
+    - script will be terminated
 
-To display errors or see them in console environment (CLI) disable [mute mode](mute.md):
-
-```php
-$mysecure->mute(false);
-```
 
 To go back to default PHP error handling run:
 
