@@ -45,5 +45,5 @@ try
 * log
 
 ### Similiar reports:
-* [Warning](warning.md)
+* [ErrorTicket](errorticket.md)
 * [ConfigError](configerror.md)
