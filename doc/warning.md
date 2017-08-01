@@ -12,7 +12,7 @@ try
     $mysecure->mute(false)
 
     // create and raise error ticket
-    $ticket = new \ErrorTicket('Database update failed today', 'Retry in 30 minutes');
+    $ticket = new Warning('Database update failed today', 'Retry in 30 minutes');
     $ticket->raise();
 
 
@@ -29,7 +29,7 @@ try
 *
 * send by: C:/Bitnami/apache2/htdocs/GitHub/SecurePHP/2.0/tests/testcase.php
 *
-* error ticket in C:\Bitnami\apache2\htdocs\GitHub\SecurePHP\2.0\tests\testcase.php, line 33
+* warning in C:\Bitnami\apache2\htdocs\GitHub\SecurePHP\2.0\tests\testcase.php, line 33
 * description: Database update failed today
 *
 * current state: Retry in 30 minutes
@@ -47,5 +47,3 @@ Default receipients:
 Similiar reports:
     * [Warning](warning.md)
     * [ConfigError](configerror.md)
-    * [InitError](initerror.md)
-    *
