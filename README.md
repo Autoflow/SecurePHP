@@ -1,12 +1,13 @@
 ## SecurePHP - error mailer and runtime sensitizing
 
-### Delivers:
+### Provides:
 
 * predefined reports based on exceptions
   - [error tickets](doc/errorticket.md)
   - [config errors](doc/configerror.md)
   - [batch reports](doc/batchreport.md)
   - [info & notice reports](doc/inforeports.md)
+  - [warning report](doc/warningreports.md)
   - init error reports
   - success reports
   - timer alerts
@@ -23,7 +24,7 @@
   
 * treat E_NOTICE's as E_ERROR's (strict mode)
   - catch type conversion errors
-  - catch undefined variables, indexes and offsets
+  - [catch undefined variables, indexes and offsets](doc/e_notice.md)
   - […]
   
 * catch recurring errors

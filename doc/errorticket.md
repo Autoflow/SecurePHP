@@ -2,44 +2,40 @@
 
 ```php
 
-try {
+try
+    {
 
     // start Autoflow\SecurePHP
     $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance(true, false);
 
-    // display errors
-    $mysecure->mute(false);
+    // display reports
+    $mysecure->mute(false)
 
-    // set to strict mode aborting on E_NOTICES
-    $mysecure->loose(false);
+    // create and send error ticket
+    $ticket = new \ErrorTicket('Database update failed today', 'Retry in 30 minutes');
+    $ticket->send_to('log');
+    $ticket->raise();
 
-    // try to access a unset variable
-    echo $x;
-
-    }
 
 ```
 
 ### Result:
 
-```console
+```text
 /**
 * SecurePHP
 *
-* PhpError
-* [27-Jul-2017 16:20:41]
+* ErrorTicket
+* [01-Aug-2017 12:24:13]
 *
-* concerned application: C:/Bitnami/apache2/htdocs/GitHub/SecurePHP/2.0/tests/testcase.php
+* send by: C:/Bitnami/apache2/htdocs/GitHub/SecurePHP/2.0/tests/testcase.php
 *
-* runtime error within C:\Bitnami\apache2\htdocs\GitHub\SecurePHP\2.0\tests\testcase.php, line 14
-* description: Undefined variable: e
+* error ticket in C:\Bitnami\apache2\htdocs\GitHub\SecurePHP\2.0\tests\testcase.php, line 33
+* description: Database update failed today
 *
-* notes: E_NOTICE
-*
-* current state: script will be aborted (Strict-Mode)
+* current state: Retry in 30 minutes
 *
 * trace:
-* 0 C:\Bitnami\apache2\htdocs\GitHub\SecurePHP\2.0\tests\testcase.php (14) AUTOFLOW\SECUREPHP\PROTECT->error_handler(8, 'Undefined ..', 'C:\Bitnami..', 14, ARRAY)
 * {main}
 *
 */
