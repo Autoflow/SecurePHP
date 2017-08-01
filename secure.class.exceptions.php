@@ -68,7 +68,7 @@ namespace AUTOFLOW\SECUREPHP
 
             $message .= '* ' . CONFIG::getInstance()->_('description') . ': ' . $e->getMessage() . SECUREPHP_LINE_BREAK;
 
-            if(\AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance()->debug())
+            if(BOOTSTRAP::getInstance()->debug())
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
                 $message .= '* ' . CONFIG::getInstance()->_('trace') . ': ' . SECUREPHP_LINE_BREAK;
