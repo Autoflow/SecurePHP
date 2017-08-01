@@ -25,7 +25,7 @@
     - send to users
     - send to cc
   
-* treat E_NOTICE's as E_ERROR's (strict mode)
+* treat E_NOTICE's as E_ERROR's ([strict mode](doc/strict.md))
     - catch type conversion errors
     - [catch undefined variables, indexes and offsets](doc/e_notice.md)
     - […]
@@ -34,8 +34,8 @@
   - [inform about repetitives errors](doc/timeout.md) (ie. every 30 minutes)
   - optimized for cronjobs
 
-* loose mode
-    - [handle errors as PHP does](doc/loose.md)
+* [loose mode](doc/loose.md)
+    - handle errors as PHP does
 
 * EOF detection
     - [get informed when PHP doesn't reach the end of file](doc/eof.md)
@@ -45,7 +45,7 @@
 
 ## Usage
 
-include secure.php in your project and get a fresh instance ..
+include secure.php in your project and get a fresh [instance](doc/init.md) ..
 
 ```php
 require_once('vendor/autoflow/securephp/secure.php');
@@ -64,9 +64,11 @@ If you want to install with composer,
 }
 ```
 
-and require autoload.php and get a new instance ..
+and require autoload.php and get a new [instance](doc/init.md) ..
 
 ```php
 require('vendor/autoload.php');
 $mysecure = AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance();
 ```
+
+
