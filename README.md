@@ -2,7 +2,7 @@
 
 ### Provides:
 
-* [default mode][doc/default.md) (default)
+* [default mode](doc/default.md) (default)
 
 * predefined reports based on exceptions
   - [error tickets](doc/errorticket.md)
