@@ -8,5 +8,5 @@ The PHP environment will be set as follows:
 * [mute mode](doc/mute.md)
  - display errors will be deactivated for CLI and SAPI environment
 
- This settings can be easily changed to a less tight handling.
- See the docs for [strict mode](doc/strict.md) and[mute mode](doc/mute.md).
+This settings can be easily changed to a less tight handling.
+See the docs for [strict mode](doc/strict.md) and[mute mode](doc/mute.md).
