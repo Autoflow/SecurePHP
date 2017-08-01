@@ -447,14 +447,6 @@ namespace AUTOFLOW\SECUREPHP
                 {
                 $this->set_init_error(new E_INIT('die Berichte-Bibliothek secure.reports.php steht nicht zur Verfügung in ' . getcwd()));
                 }
-            elseif(ini_get('log_errors') AND !ini_set('log_errors', false))
-                {
-                $this->set_init_error(new E_INIT('Konnte log_errors nicht deaktivieren'));
-                }
-            elseif(ini_get('display_errors') AND !$this->mute(1))
-                {
-                $this->set_init_error(new E_INIT('Konnte Standardmodus nicht aktivieren.'));
-                }
             elseif (false === $this->set_abs_path())
                 {
                 $this->set_init_error(new E_INIT('konnte das Basisverzeichnis  nicht ermitteln'));
@@ -479,7 +471,7 @@ namespace AUTOFLOW\SECUREPHP
                 {
                 $this->set_init_error(new E_INIT('konnte die Einstellungen für STDERR  nicht festlegen'));
                 }
-            elseif (false === (DB::getInstance()->init()))
+            elseif(false == DB::getInstance()->init())
                 {
                 $this->set_init_error(new E_INIT('konnte keine gültige DB-Klasse ableiten. Fehler beim Erzeugen der Instanz.', false, DB::getInstance()->get_init_error()));
                 }
@@ -498,6 +490,14 @@ namespace AUTOFLOW\SECUREPHP
             elseif (false === PROTECT::getInstance()->protect())
                 {
                 $this->set_init_error(PROTECT::getInstance()->get_init_error());
+                }
+            elseif(ini_get('log_errors') AND !ini_set('log_errors', false))
+                {
+                $this->set_init_error(new E_INIT('Konnte log_errors nicht deaktivieren'));
+                }
+            elseif(ini_get('display_errors') AND !$this->mute(1))
+                {
+                $this->set_init_error(new E_INIT('Konnte mute-mode nicht aktivieren.'));
                 }
             elseif (false === ($this->flag_is_configured = true))
                 {
@@ -1973,17 +1973,21 @@ namespace AUTOFLOW\SECUREPHP
         final public function _($token, $language = 'en_EN', $args=ARRAY())
             {
             $language = $this->locale;
-            $result = DB::getInstance()->server->query("SELECT * FROM translations WHERE token = '$token'");
-            $row = $result->fetchArray();
-            if(empty($row) || empty($row[$language]))
+            if(false == DB::getInstance()->is_ready()) return $token;
+            else
                 {
-                return $token;
+                $result = DB::getInstance()->server->query("SELECT * FROM translations WHERE token = '$token'");
+                $row = $result->fetchArray();
+                if(empty($row) || empty($row[$language]))
+                    {
+                    return $token;
+                    }
+                elseif(count($args))
+                    {
+                    return vsprintf($row[$language], $args);
+                    }
+                else return $row[$language];
                 }
-            elseif(count($args))
-                {
-                return vsprintf($row[$language], $args);
-                }
-            else return $row[$language];
             }
 
         /**
@@ -3308,6 +3312,7 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function init()
             {
+
             if($this->is_ready()) return true;
             elseif(!$db = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'securephp.sqlite');
             elseif(!file_exists($db))
@@ -3315,13 +3320,17 @@ namespace AUTOFLOW\SECUREPHP
                 $this->set_init_error(new E_INIT('konnte ' . SECUREPHP . '-Datenbank nicht erstellen.', false, $this->get_init_error()));
                 return false;
                 }
+            elseif(false == class_exists('SQLite3'))
+                {
+                $this->set_init_error(new E_INIT('SQLITE3 Datenbanktreiber nicht installiert.'));
+                return false;
+                }
             else
                 {
                 try
                     {
                     $this->server = new \SQLite3($db);
-                    $this->is_ready(true);
-                    return true;
+                    return $this->is_ready(true);
                     }
                 catch (\Exception $e)
                     {
@@ -3331,6 +3340,10 @@ namespace AUTOFLOW\SECUREPHP
                 }
             }
 
+        /**
+         * @param null $flag_ready
+         * @return bool
+         */
         final public function is_ready($flag_ready = NULL)
             {
             if(NULL === $flag_ready) return $this->flag_is_ready;
