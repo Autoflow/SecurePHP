@@ -2,19 +2,21 @@
 
 ### Provides:
 
+* [default mode][doc/default.md) (default)
+
 * predefined reports based on exceptions
   - [error tickets](doc/errorticket.md)
   - [config errors](doc/configerror.md)
   - [batch reports](doc/batchreport.md)
   - [info & notice reports](doc/inforeports.md)
   - [warning report](doc/warningreports.md)
-  - init error reports
-  - success reports
-  - timer alerts
-  - transaction & transition reports
-  - uncaught exception reports
+  - [init error reports](doc/initerror.md)
+  - [success reports](doc/successreport.md)
+  - [timer alerts & reminders](doc/timeout.md)
+  - [transaction & transition reports](doc/execution_errors.md)
+  - [uncaught exception reports](doc/uncaught.md)
   - [..]
-  - easily sent by email, to STDERR or to log
+  - easily sent by [email](doc/email_basiscs.md), to STDERR or to log
   
 
 * [send reports to email inboxes](doc/email_basisc.md)
