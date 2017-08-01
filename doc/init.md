@@ -1,4 +1,5 @@
 ### Init SecurePHP
+-----
 *(PHP 5.5)*
 
 ```php
