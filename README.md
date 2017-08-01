@@ -17,7 +17,7 @@
     - [uncaught exception reports](doc/uncaught.md)
     - [..]
     - easily sent by [email](doc/email_basisc.md), to STDERR or to log
-    - language translations
+    - available in different translations
   
 
 * [send reports to email inboxes](doc/email_basisc.md)
