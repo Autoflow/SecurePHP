@@ -2,11 +2,11 @@
 
 ```php
 $mysecure->strict(false);
-´´´
+```
 
 or by
 
-´´´php
+```php
 $mysecure->loose(true);
 ```
 
