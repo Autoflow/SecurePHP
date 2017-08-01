@@ -1330,7 +1330,7 @@ namespace AUTOFLOW\SECUREPHP
                 // Error handling (strict or loose)
 
                 $error = new \PhpError($error_message, NULL, $error_level, $error_file, $error_line);
-                $error->set_note($this->get_php_error($error_level)[0]);
+                $error->set_note(CONFIG::getInstance()->_('php reported an error') .':' . $this->get_php_error($error_level)[0]);
 
                 $exit = 0;
                 if(SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode()) $mode = 'Strict-Mode';
