@@ -16,7 +16,7 @@
     - [transaction & transition reports](doc/execution_errors.md)
     - [uncaught exception reports](doc/uncaught.md)
     - [..]
-    - easily sent by [email](doc/email_basiscs.md), to STDERR or to log
+    - easily sent by [email](doc/email_basisc.md), to STDERR or to log
   
 
 * [send reports to email inboxes](doc/email_basisc.md)
