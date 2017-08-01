@@ -11,9 +11,8 @@ try
     // display reports
     $mysecure->mute(false)
 
-    // create and send error ticket
+    // create and raise error ticket
     $ticket = new \ErrorTicket('Database update failed today', 'Retry in 30 minutes');
-    $ticket->send_to('log');
     $ticket->raise();
 
 
