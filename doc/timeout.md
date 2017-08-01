@@ -74,3 +74,21 @@ catch(PDOException $e)
 *
 */
 ```
+
+### Individual timeouts
+
+Timeout can be defined on ticket/report basis:
+
+```php
+$report = new ErrorTicket("...", "...");
+$report->raise(int $timeout);
+```
+
+### Individual reminders
+
+Reminder can be defined on ticket/report basis:
+
+```php
+$report = new ErrorTicket("...", "...");
+$report->raise(int $timeout, int $reminder);
+```

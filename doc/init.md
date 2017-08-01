@@ -1,6 +1,7 @@
 ### Init SecurePHP
------
 *(PHP 5.5)*
+-----
+
 
 ```php
 AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance()->init( string|bool $logfile, bool $stderr, int $devices);

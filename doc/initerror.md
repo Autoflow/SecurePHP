@@ -1,3 +1,5 @@
+# InitError (extends [ErrorTicket][errorticket.md)]
+-----------
 ## Example usage:
 
 ```php
@@ -56,6 +58,9 @@ catch(AUTOFLOW\SECUREPHP\E_INIT  $e)
 ### Default receipients:
 * admin > user
 * log
+
+### For more see ..
+* [ErrorTicket](errorticket.md)
 
 ### Similiar reports:
 * [Warning](warning.md)

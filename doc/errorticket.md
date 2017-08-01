@@ -1,3 +1,5 @@
+# ErrorTicket
+-------------
 ## Example usage:
 
 ```php
@@ -39,6 +41,15 @@ try
 *
 */
 ```
+
+### ErrorTicket
+* ErrorTicket::raise(int $timeout) - raise error ticket and send to log, mail inboxes and/or STDOUT/STDERR
+* ErrorTicket::send_to(string $receipients) - list of ticket [receipients](receipients.md)
+* ErrorTicket::state(string $state) - set state description
+* ErrorTicket::note(string $note) - set a note
+* ErrorTicket::add_param(string $name, mixed $value) - add a parameter value
+* ErrorTicket::add_params(array $params) - add a list of parameters
+
 
 ### Default receipients:
 * admin
