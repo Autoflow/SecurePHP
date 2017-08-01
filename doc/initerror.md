@@ -14,7 +14,7 @@ try
     $mysecure->mute(false)
 
     // some init errors occured
-    throw new AUTOFLOW\SECUREPHP\E_INIT('some error');
+    throw new Exception('some init error occured ..');
 
     }
 
@@ -46,8 +46,8 @@ catch(AUTOFLOW\SECUREPHP\E_INIT  $e)
 
 * previously:
 *
-* AUTOFLOW\SECUREPHP\E_INIT in C:\Bitnami\apache2\htdocs\GitHub\SecurePHP\2.0\tests\testcase.php, line 24
-* description: some error
+* Exception in C:\Bitnami\apache2\htdocs\GitHub\SecurePHP\2.0\tests\testcase.php, line 24
+* description: some init error occured ...
 *
 * trace:
 * {main}
