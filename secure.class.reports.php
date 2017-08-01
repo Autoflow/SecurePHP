@@ -1033,31 +1033,6 @@ namespace
 
         }
 
-    /**
-     * Class TimerAlert
-     * @inherit \ErrorReport
-     */
-	final class Reminder extends \ErrorReport
-		{
-
-        /**
-         * @var string
-         */
-		public $description = 'reminder alert';
-
-        /**
-         * Report-Empfänger.
-         * @var string
-         */
-        protected $send_to     = "admin>user,log";
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = false;
-
-		}
-
 
     /**
      * Class BatchReport
@@ -1325,6 +1300,31 @@ namespace
             $message .= $this->get_mail_message_footer();
             return $message;
             }
+        }
+
+    /**
+     * Class TimerAlert
+     * @inherit \ErrorReport
+     */
+    final class Reminder extends \BatchReport
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'reminder alert';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin>user,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = false;
+
         }
 
 
