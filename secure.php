@@ -1776,7 +1776,7 @@ namespace AUTOFLOW\SECUREPHP
                 E_USER_WARNING      => ARRAY('E_USER_WARNING', false, false),
                 E_USER_NOTICE       => ARRAY('E_USER_NOTICE', false, false),
                 E_STRICT            => ARRAY('E_STRICT', false, false),
-                E_RECOVERABLE_ERROR => ARRAY('E_RECOVERABLE_ERROR', SECUREPHP_EXIT_ON_ERROR, false),
+                E_RECOVERABLE_ERROR => ARRAY('E_RECOVERABLE_ERROR', false, false),
                 E_DEPRECATED        => ARRAY('E_DEPRECATED', false, false),
                 E_USER_DEPRECATED   => ARRAY('E_USER_DEPRECATED', false, false),
             );
