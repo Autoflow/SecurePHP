@@ -1,4 +1,4 @@
-### This is the default mode after initialising the SecurePHP libraray.
+### This is the [default](default.md) mode after initialising the SecurePHP libraray.
 
 The enviroment is set to:
 
