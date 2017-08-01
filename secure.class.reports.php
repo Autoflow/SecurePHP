@@ -73,12 +73,6 @@ namespace
 		protected $timeout                 = NULL;
 
         /**
-         * Email-Empfänger.
-         * @var string
-         */
-        protected $send_to              = "admin>user,log";
-
-        /**
          * Nachricht wurde gesendet.
          * @var bool
          */
@@ -717,6 +711,12 @@ namespace
         public $description    = 'error ticket';
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
          * @var bool
          */
         protected $flag_details = true;
@@ -750,6 +750,12 @@ namespace
          * @var string
          */
         public $description = 'confirmation ticket';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user";
 
         /**
          * @var bool
@@ -786,6 +792,12 @@ namespace
          * @var string
          */
         public $description = 'batch report';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin>user";
 
         /**
          * @var bool
@@ -937,6 +949,12 @@ namespace
         public $description = "error report";
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user";
+
+        /**
          * @var bool
          */
         protected $flag_details = false;
@@ -958,6 +976,12 @@ namespace
          * @var string
          */
         public $description = "working range";
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user";
 
         /**
          * @var bool
@@ -1026,7 +1050,55 @@ namespace
             }
         }
 
+    /**
+     * Class Warning.
+     * @inherit \ErrorTicket
+     */
+    final class Warning extends \ErrorTicket
+        {
 
+        /**
+         * @var string
+         */
+        public $description = 'warning';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        }
+
+    /**
+     * Class UserWarning.
+     * @inherit \ErrorTicket
+     */
+    final class UserWarning extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'warning';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        }
 
     /**
      * Class Notice.
@@ -1041,17 +1113,41 @@ namespace
         public $description = 'notice';
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
          * @var bool
          */
         protected $flag_details = true;
 
+        }
+
+    /**
+     * Class UserNotice.
+     * @inherit \ErrorTicket
+     */
+    final class UserNotice extends \ErrorTicket
+        {
+
         /**
-         * @return string
+         * @var string
          */
-        final public function get_mail_header()
-            {
-            return SECUREPHP . $this->getMessage();
-            }
+        public $description = 'notice';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
         }
 
     /**
@@ -1067,6 +1163,12 @@ namespace
          * @var string
          */
 		public $description    = 'config error';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
 
         /**
          * @var bool
@@ -1151,6 +1253,12 @@ namespace
 		public $description = 'init error';
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin>user,log";
+
+        /**
          * @var bool
          */
         protected $flag_details = true;
@@ -1176,6 +1284,12 @@ namespace
         public $description = 'transition error';
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user>admin,log";
+
+        /**
          * @var bool
          */
         protected $flag_details = true;
@@ -1195,32 +1309,17 @@ namespace
         public $description = 'transaction error';
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user>admin,log";
+
+        /**
          * @var bool
          */
         protected $flag_details = true;
 
         }
-
-    /**
-     * @todo zu allgemein, spezifizieren
-     * Class ClassError
-     * @inherit \ErrorTicket
-     */
-	final class ClassError extends \ErrorTicket
-
-		{
-
-        /**
-         * @var string
-         */
-		public $description = 'class error';
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-		}
 
     /**
      * Class TimerAlert
@@ -1235,9 +1334,16 @@ namespace
 		public $description = 'reminder alert';
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin>user,log";
+
+        /**
          * @var bool
          */
         protected $flag_details = false;
+
 		}
 
     /**
@@ -1253,9 +1359,16 @@ namespace
         public $description = 'uncaught exception';
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
          * @var bool
          */
         protected $flag_details = false;
+
         }
 
     /**
@@ -1271,9 +1384,16 @@ namespace
         public $description = "eof error";
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
          * @var bool
          */
         public $flag_details = false;
+
         }
 
     /**
@@ -1291,6 +1411,12 @@ namespace
          * @var string
          */
         public $description = "PHP runtime error";
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
 
         /**
          * @var bool
@@ -1311,12 +1437,63 @@ namespace
             {
 
             parent::__construct($message, $code, $severity, $file, $line, $previous);
-            #if(class_exists("\SECUREPHP\PROTECT", false))
-            #    {
-                 #$this->application = \SECUREPHP\PROTECT::getInstance()->get_app();
-            #    }
+
+
             }
 		}
+
+    /**
+     * Class PhpWarning
+     * @inherit Error
+     */
+    class PhpWarning extends \PhpError
+
+        {
+
+        /**
+         * @var string
+         */
+        public $description = "php warning";
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        public $flag_details = false;
+
+        }
+
+
+    /**
+     * Class PhpNotice
+     * @inherit Error
+     */
+    class PhpNotice extends \PhpError
+
+        {
+
+        /**
+         * @var string
+         */
+        public $description = "php notice";
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        public $flag_details = false;
+
+        }
 
     /**
      * Class ShutdownError
@@ -1332,12 +1509,16 @@ namespace
 		public $description = "shutdown error";
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
          * @var bool
          */
         public $flag_details = true;
 
 		}
-
-
 
 	}
