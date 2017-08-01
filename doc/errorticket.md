@@ -40,11 +40,11 @@ try
 */
 ```
 
-Default receipients:
+### Default receipients:
 * admin
 * log
 
-Similiar reports:
+### Similiar reports:
 * [Warning](warning.md)
 * [ConfigError](configerror.md)
 * [InitError](initerror.md)

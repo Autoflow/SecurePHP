@@ -53,10 +53,10 @@ catch(AUTOFLOW\SECUREPHP\E_INIT  $e)
 */
 ```
 
-Default receipients:
-    * admin > user
-    * log
+### Default receipients:
+* admin > user
+* log
 
-Similiar reports:
-    * [Warning](warning.md)
-    * [ConfigError](configerror.md)
+### Similiar reports:
+* [Warning](warning.md)
+* [ConfigError](configerror.md)

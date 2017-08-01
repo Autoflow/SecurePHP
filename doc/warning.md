@@ -40,10 +40,10 @@ try
 */
 ```
 
-Default receipients:
-    * admin
-    * log
+### Default receipients:
+* admin
+* log
 
-Similiar reports:
-    * [Warning](warning.md)
-    * [ConfigError](configerror.md)
+### Similiar reports:
+* [Warning](warning.md)
+* [ConfigError](configerror.md)
