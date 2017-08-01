@@ -2,7 +2,7 @@
 
 ### Delivers:
 
-* predefined error reports based on exceptions
+* predefined reports based on exceptions
   - [error tickets](doc/errorticket.md)
   - [config errors](doc/configerror.md)
   - [batch reports](doc/batchreport.md)
@@ -16,7 +16,7 @@
   - easily sent by email, to STDERR or to log
   
 
-* [send errors to email inboxes](doc/email_basisc.md)
+* [send reports to email inboxes](doc/email_basisc.md)
   - send to admin
   - send to users
   - send to cc
@@ -26,7 +26,7 @@
   - catch undefined variables, indexes and offsets
   - […]
   
-* catch recurring errors](doc/timeout.md)
+* catch recurring errors
   - [inform about repetitives errors](doc/timeout.md) (ie. every 30 minutes)
   - optimized for cronjobs
 
