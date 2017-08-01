@@ -41,11 +41,10 @@ try
 ```
 
 Default receipients:
-    * admin
-    * log
+* admin
+* log
 
 Similiar reports:
-    * [Warning](warning.md)
-    * [ConfigError](configerror.md)
-    * [InitError](initerror.md)
-    *
+* [Warning](warning.md)
+* [ConfigError](configerror.md)
+* [InitError](initerror.md)
