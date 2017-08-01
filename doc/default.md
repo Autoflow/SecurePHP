@@ -1,4 +1,5 @@
-When starting the library PHP will be set to a silent and more sensitive mode.
+###When starting the library PHP will be set to a silent and more sensitive mode.
+
 The PHP environment will be set as follows:
 
 * [strict mode](doc/strict.md)
@@ -9,4 +10,4 @@ The PHP environment will be set as follows:
  - display errors will be deactivated for CLI and SAPI environment
 
 This settings can be easily changed to a less tight handling.
-See the docs for [strict mode](doc/strict.md) and[mute mode](doc/mute.md).
+See the docs for [strict mode](doc/strict.md) and [mute mode](doc/mute.md).
