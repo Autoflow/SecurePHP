@@ -2076,11 +2076,13 @@ namespace AUTOFLOW\SECUREPHP
                 {
                 $this->config_error = new E_INIT('konnte Mail-Benutzer nicht setzen. Mail-Init fehlerhaft.', false, MAIL::getInstance()->get_init_error());
                 $this->terminate($this->config_error);
+                return false;
                 }
             elseif(false == (MAIL::getInstance()->set_user($user)))
                 {
                 $this->config_error = MAIL::getInstance()->get_error();
                 $this->terminate($this->config_error);
+                return false;
                 }
             else return true;
             }
@@ -2096,11 +2098,13 @@ namespace AUTOFLOW\SECUREPHP
                 {
                 $this->config_error = new E_INIT('konnte Mail-Benutzer nicht setzen. Mail-Init fehlerhaft.', false, MAIL::getInstance()->get_init_error());
                 $this->terminate($this->config_error);
+                return false;
                 }
             elseif(false == MAIL::getInstance()->add_cc($user, $email))
                 {
                 $this->config_error = MAIL::getInstance()->get_error();
                 $this->terminate($this->config_error);
+                return false;
                 }
             else return true;
             }
@@ -2131,7 +2135,7 @@ namespace AUTOFLOW\SECUREPHP
             {
             if(NULL === $env)
                 {
-                return $this->env;
+                return $this->locale;
                 }
             elseif('t' == strtolower($env))
                 {
@@ -2143,7 +2147,7 @@ namespace AUTOFLOW\SECUREPHP
                 $this->locale = "de_DE";
                 return true;
                 }
-            else return;
+            else return NULL;
             }
 
         /**
@@ -2205,6 +2209,7 @@ namespace AUTOFLOW\SECUREPHP
 
         /**
          * @param \Exception $e
+         * @param bool $flag_prompt
          * @return bool|null
          * @throws E_INIT
          */
@@ -2438,6 +2443,7 @@ namespace AUTOFLOW\SECUREPHP
 			}
 
         /**
+         * @param bool $flag_ready
          * @return bool
          */
         final public function is_ready($flag_ready = NULL)
@@ -2534,7 +2540,7 @@ namespace AUTOFLOW\SECUREPHP
             else
                 {
                 $message = 'Email-Versand fehlgeschlagen für ' . $to . '. Nachricht: ' . $message;
-                ERRORLOG::getInstance()->log(new E_NOTICE($message));
+                ERRORLOG::getInstance()->log(new E_CONFIG($message));
                 return false;
                 }
             }
@@ -3276,7 +3282,7 @@ namespace AUTOFLOW\SECUREPHP
         private $flag_is_ready = false;
 
         /**
-         * @var \SQLITE
+         * @var \SQLITE3
          */
         public $server;
 
