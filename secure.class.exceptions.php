@@ -35,7 +35,7 @@ namespace AUTOFLOW\SECUREPHP
             if ($prev = $this->getPrevious()) do
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= "* Vorausgehend:" . SECUREPHP_LINE_BREAK;
+                $message .= "* ".CONFIG::getInstance()->_('previous').":" . SECUREPHP_LINE_BREAK;
                 $message .= '*' . SECUREPHP_LINE_BREAK;
                 $message .= '* '.get_class($prev) . SECUREPHP_LINE_BREAK;
                 $message .= $this->toString($prev);
@@ -52,7 +52,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception $e
          * @return string
          */
-        public function toString(\Exception $e)
+        public function toString($e)
             {
 
             $message = '';
@@ -61,7 +61,7 @@ namespace AUTOFLOW\SECUREPHP
                 ('* %s %s %s, %s %s ' . SECUREPHP_LINE_BREAK,
                     get_class($e),
                     CONFIG::getInstance()->_('within'),
-                    $e->getFile(),
+                    ('test' == CONFIG::getInstance()->locale() ? basename($e->getFile()) : $e->getFile()),
                     CONFIG::getInstance()->_('line'),
                     $e->getLine()
                 );
@@ -82,7 +82,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception $e
          * @return string
          */
-        final public function formatTrace(\Exception $e)
+        final public function formatTrace($e)
             {
 
             $message = '';
