@@ -448,7 +448,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param $e \Exception
          * @throws \Exception | \Raisable | \RaisableError
          */
-        final public function terminate(\Exception $e)
+        final public function terminate($e)
             {
             ERRORLOG::getInstance()->log($e, false);
             throw $e;
@@ -707,7 +707,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception $e
          * @return bool | \Exception
          */
-        final public function init_error(\Exception $e = NULL)
+        final public function init_error($e = NULL)
 			{
             if(NULL === $e)
                 {
@@ -725,7 +725,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception $e
          * @return bool | \Exception
          */
-        final public function error(\Exception $e = NULL)
+        final public function error($e = NULL)
             {
             if(NULL == $e)
                 {
@@ -1198,16 +1198,20 @@ namespace AUTOFLOW\SECUREPHP
          *
          * @param \Exception|\Raisable|\RaisableError $e
          * @return void
-         * @throws \Exception
          */
         final public function exception_handler($e)
 			{
 
             #echo "exceptionhandler";
 
-            if(is_a($e, '\SECUREPHP\E_RAISEABLE') OR is_a($e, '\SECUREPHP\E_RAISABLE_ERROR'))
+            if(is_a($e, 'Raisable') OR is_a($e, 'RaisableError'))
                 {
                 $e->raise();
+                exit(0);
+                }
+            elseif(is_a($e, 'Error'))
+                {
+                BOOTSTRAP::getInstance()->terminate($e);
                 exit(0);
                 }
             else
@@ -1663,7 +1667,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception $e
          * @return bool|NULL
          */
-        final private function notify_user(\Exception $e)
+        final private function notify_user($e)
             {
             return MAIL::getInstance()->forward('user', $e);
             }
@@ -1672,7 +1676,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception $e
          * @return bool|NULL
          */
-        final private function notify_admin(\Exception $e)
+        final private function notify_admin($e)
             {
             return MAIL::getInstance()->forward('admin', $e);
             }
@@ -1693,7 +1697,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception $e
          * @return bool | \Exception
          */
-        final public function init_error(\Exception $e = NULL)
+        final public function init_error($e = NULL)
             {
             if(NULL === $e)
                 {
@@ -2027,7 +2031,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param string $admin
          * @return bool
          */
-        final public function admins($admin)
+        final public function admin($admin)
             {
             if(false == MAIL::getInstance()->is_ready() AND false == BOOTSTRAP::getInstance()->startmail())
                 {
@@ -2048,7 +2052,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param string $user
          * @return bool
          */
-        final public function users($user)
+        final public function user($user)
             {
             if(false == MAIL::getInstance()->is_ready() AND false == BOOTSTRAP::getInstance()->startmail())
                 {
@@ -2070,7 +2074,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param string $email
          * @return bool
          */
-        final public function cc($user, $email)
+        final public function add_cc($user, $email)
             {
             if(false == MAIL::getInstance()->is_ready() AND false == BOOTSTRAP::getInstance()->startmail())
                 {
@@ -2195,7 +2199,7 @@ namespace AUTOFLOW\SECUREPHP
          * @return bool|null
          * @throws E_INIT
          */
-        public function log(\Exception $e, $flag_prompt=true)
+        public function log($e, $flag_prompt=true)
             {
 
             // Exception in Fehlernachricht umwandeln
@@ -2266,7 +2270,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception $e
          * @return string
          */
-        private function get_message(\Exception $e)
+        private function get_message($e)
 			{
             $message = '';
             $message .= '<pre style="background-color:black; color:white; border:1px solid black; border-radius:10px;">';
@@ -2578,7 +2582,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception|\RAISABLE $e
          * @return \stdClass
          */
-        final public function get_mail_data(\Exception $e)
+        final public function get_mail_data($e)
             {
             if(is_a($e, 'ErrorTicket'))
                 {
@@ -3198,7 +3202,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception | NULL $e
          * @return bool | \Exception
          */
-        final public function init_error(\Exception $e = NULL)
+        final public function init_error($e = NULL)
             {
             if(NULL === $e)
                 {
@@ -3215,7 +3219,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception | NULL $e
          * @return bool | \Exception
          */
-        final public function error(\Exception $e = NULL)
+        final public function error($e = NULL)
             {
             if(NULL === $e)
                 {
@@ -3352,7 +3356,7 @@ namespace AUTOFLOW\SECUREPHP
                     $this->server = new \SQLite3($db);
                     return $this->is_ready(true);
                     }
-                catch (\Exception $e)
+                catch(\Exception $e)
                     {
                     $this->init_error(new E_INIT('konnte ' . SECUREPHP . '-Datenbank nicht starten.', 0, $e));
                     return false;
@@ -3381,7 +3385,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param NULL | \Exception $e
          * @return bool | \Exception
          */
-        final public function init_error(\Exception $e = NULL)
+        final public function init_error($e = NULL)
             {
             if(NULL === $e)
                 {
