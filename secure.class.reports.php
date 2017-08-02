@@ -27,7 +27,7 @@ namespace
      * @inherit Exception
      */
 
-    trait RAISEABLE
+    trait RAISABLE_TRAIT
 
 		{
 
@@ -669,7 +669,7 @@ namespace
 
         // E_RAISEABLE HEAD
 
-        use \RAISEABLE;
+        use \RAISABLE_TRAIT;
 
         }
 
@@ -681,7 +681,7 @@ namespace
 
         // E_RAISEABLE_ERROR HEAD
 
-        use \RAISEABLE;
+        use \RAISABLE_TRAIT;
         }
 
     /**
