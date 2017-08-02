@@ -1,104 +1,15 @@
 <?php
 
-// Version 2.0
-# 1) Initial release, no info
-
 /**
- * SecurePHP Fehlerklasse.
- *
- * Klasse zum Abfangen von Laufzeitfehlern und Exceptions sowie
- * zum Senden dieser und weiterer vorgefertigter bzw. eigener
- * Berichte und Zusammenfassungen per Email.
- *
- * Sendet Fehler und Berichte/Zusammenfassungen per Standard an ein
- * mittels @see BOOTSTRAP::getInstance->reference
- * definiertes, zentrales Logfile sowie, je nach Bedarf,
- * zusätzlich nach STDERR und per Mail an Anwender.
- *
- * Basis der Berichte, Fehler und Zusammenfassungen bilden Exceptions
- * bzw. die davon mittels @see secure.class.reports.php abgeleiteten
- * Klassen für Exception/Error- und Shutdown-Handler.
- *
- * Beispiel:
- *
- * $error = new ErrorTicket('Fehlerbeschreibung', 'Statusbeschreibung');
- * $error->set_error('exakte Fehlerursache');
- * $error->send_to('admin>user', log); # Reihenfolge der Zustellung festlegen
- * $error->send(); # versendet den Fehlerbericht
- *
- * Im obigen Beispiel wird ein allgemeines Fehlerticket mit Fehlerbeschreibung,
- * Statusinformation und Fehlerursache erstellt. Das Ticket wird per Email an
- * eine Liste von Administratoren (CONFIG::admin()) gesendet. Wenn die Zu-
- * stellung fehlschlägt stattdessen an die vorher mittels CONFIG::user() fest-
- * gelegten Anwendungsbenutzer. Zusätzlich werden die Fehlerinformationen
- * in das Logfile geschrieben.
- *
- * Die eingebundene SecurePHP-Klasse muß mittels BOOTSTRAP::init()
- * zuerst  initialisert werden. Ohne Initialisierung können keine
- * Emails versendet werden und die Fehlerbehandlung wird weiterhin von
- * der PHP-Laufzeitumgebung festgelegt.
- *
- * Details zur Initialisierungsequenz siehe @see BOOTSTRAP::init()
- *
- * Nach der Initialisierung mittels BOOTSTRAP::init() ändern sich folgende
- * Eigenschaften der PHP-Laufzeitumgebung:
- *
- * 1) mittels error_log() ist eine zentrale Fehlerlogdatei
- *    festgelegt auf den Namen der ausgeführten Datei mit der
- *    Endung .log.txt. Mittels des Init-Parameters 'reference'
- *    lässt sich ein globales Logfile festlegen, welche die
- *    Fehler aus verschiedenen Scripten bündelt (Beispiel:
- *    Webanwendung mit zentralem Controller)
- *
- * 2) E_NOTICE-Fehler werden als Fatale Fehler behandelt.
- *    Der laufende Prozess wird abgebrochen.
- *
- * 3) Wiederholungsfehler können mittels der TIMEOUT-Klasse
- *    als solche erkannt und abgefangen werden. Verhindert
- *    den Massenversand von Emails bei sich kurzfristig
- *    wiederholenden Cronjobs.
- *
- * 4) Fehler können mittels der ERRORLOG-Klasse in ein Logfile
- *    und gleichzeitig auf die Ausgabe, STDERR und nach error_log
- *    geschrieben werden.
- *
- *  5) Der @-Parameter wurde dahingehend erweitert, daß das Skript
- *     weiterläuft.
- *
- * Um Fehler oder Berichte bzw. Zusammenfassungen per Email
- * zu versenden ist die Konfiguration der Email-Umgebung vor-
- * zunehmen.
- *
- * 1) Absender festlegen mittels PROTECT->set_from()
- * 2) Administratoren festlegen: PROTECT->admin()
- * 3) Benutzer festlegen: PROTECT->user();
- * 4) weitere Benutzer für individuelle Nachrichten: PROTECT->add_user()
- *
- *     Beispiel:
- *
- * // Initialisierung
- * 1) $securephp = include_once 'secure.php';
- * 2) $securephp->init($_SERVER['SCRIPT_FILENAME']);
- *
- * // Email-Konfiguration
- * 3) $securephp->config->set_from('securephp@localhost');
- * 4) $securephp->config->admin('admin@localhost');
- * 5) $securephp->config->user('operator@localhost');
- * 6) $securephp->config->add_user('manager', 'manager@localhost');
- *
- * // Timeout festlegen - unterbindet Wiederholungsfehler.
- * 7) $securephp->config->set_timeout( 5 * 60 );
- *
- * // Fehlerbehandlung (senden, bzw. Log)
- * 8) if($secure->config->has_errors()) $securephp->config->errors->raise();
- * oder mittels Exception
- * 9) if($secure->config->has_errors()) throw $securephp->config->errors;
- *
+ * Autoflow/SecurePHP
  *
  * @package SECUREPHP
  * @author Alexander Münch
  * @copyright Alexander Münch
  * @version 2.0
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace AUTOFLOW\SECUREPHP
@@ -276,7 +187,7 @@ namespace AUTOFLOW\SECUREPHP
 
     // INCLUDES
 
-    spl_autoload_register(function ($class = '')
+    spl_autoload_register(function ()
         {
         include_once 'secure.class.base.php';
         include_once 'secure.class.exceptions.php';
@@ -388,7 +299,7 @@ namespace AUTOFLOW\SECUREPHP
 				static::$instance = new static();
                 if(false == static::$instance->init($logfile, $flag_to_stderr, $permit_for))
                     {
-                    throw static::$instance->get_init_error();
+                    throw static::$instance->init_error();
                     }
 				}
 				return static::$instance;
@@ -429,84 +340,85 @@ namespace AUTOFLOW\SECUREPHP
                 // - traits ab 5.4
                 // - passing null to set_error_handler was added in PHP 5.5
                 // - PHP 5.4.0, the CLI SAPI provides a built-in web server
-                $this->set_init_error(new E_INIT('PHP-Version wird nicht unterstützt'));
+                $this->init_error(new E_INIT('PHP-Version wird nicht unterstützt'));
                 }
             elseif (false === $this->set_logfile($logfile))
                 {
-                $this->set_init_error(new E_INIT('konnte Konfiguration für das Logfile nicht ermitteln', false, $this->get_init_error));
+                $this->init_error(new E_INIT('konnte Konfiguration für das Logfile nicht ermitteln', false, $this->init_error()));
                 }
             elseif (false === $this->set_error_log())
                 {
-                $this->set_init_error(new E_INIT('konnte das Logifle nicht umleiten'), false, $this->get_init_error);
+                $this->init_error(new E_INIT('konnte das Logifle nicht umleiten'), false, $this->init_error());
                 }
             elseif (false === (BOOTSTRAP::$starttime = time()))
                 {
-                $this->set_init_error(new E_INIT('konnte den Startzeitpunkt nicht ermitteln'));
+                $this->init_error(new E_INIT('konnte den Startzeitpunkt nicht ermitteln'));
                 }
             elseif (false === (include $this->get_local_dir() . 'secure.class.reports.php'))
                 {
-                $this->set_init_error(new E_INIT('die Berichte-Bibliothek secure.reports.php steht nicht zur Verfügung in ' . getcwd()));
+                $this->init_error(new E_INIT('die Berichte-Bibliothek secure.reports.php steht nicht zur Verfügung in ' . getcwd()));
                 }
             elseif (false === $this->set_abs_path())
                 {
-                $this->set_init_error(new E_INIT('konnte das Basisverzeichnis  nicht ermitteln'));
+                $this->init_error(new E_INIT('konnte das Basisverzeichnis  nicht ermitteln'));
                 }
             elseif (false === $this->check_cwd())
                 {
-                $this->set_init_error(new E_INIT('konnte das Basisverzeichnis nicht prüfen'));
+                $this->init_error(new E_INIT('konnte das Basisverzeichnis nicht prüfen'));
                 }
             elseif (false === $this->backup_cwd())
                 {
-                $this->set_init_error(new E_INIT('konnte das Basisverzeichnis nicht sichern'));
+                $this->init_error(new E_INIT('konnte das Basisverzeichnis nicht sichern'));
                 }
             if (false == ($this->config = CONFIG::getInstance()))
                 {
-                $this->set_init_error(new E_INIT('konnte CONFIG-Instanz nicht starten'));
+                $this->init_error(new E_INIT('konnte CONFIG-Instanz nicht starten'));
                 }
             elseif (false === (ERRORLOG::getInstance()))
                 {
-                $this->set_init_error(new E_INIT('konnte keine gültige ERRORLOG-Klasse ableiten. Fehler beim Erzeugen der Instanz', false, ERRORLOG::getInstance()->get_init_error()));
+                $this->init_error(new E_INIT('konnte keine gültige ERRORLOG-Klasse ableiten. Fehler beim Erzeugen der Instanz', false));
                 }
             elseif (false == CONFIG::getInstance()->to_stderr($flag_to_stderr))
                 {
-                $this->set_init_error(new E_INIT('konnte die Einstellungen für STDERR  nicht festlegen'));
+                $this->init_error(new E_INIT('konnte die Einstellungen für STDERR  nicht festlegen'));
                 }
             elseif(false == DB::getInstance()->init())
                 {
-                $this->set_init_error(new E_INIT('konnte keine gültige DB-Klasse ableiten. Fehler beim Erzeugen der Instanz.', false, DB::getInstance()->get_init_error()));
+                $this->init_error(new E_INIT('konnte keine gültige DB-Klasse ableiten. Fehler beim Erzeugen der Instanz.', false, DB::getInstance()->init_error()));
                 }
             elseif (false === $this->set_interfaces($permit_for))
                 {
-                $this->set_init_error(new E_INIT('konnte die Liste erlaubter Endgeräte nicht festelegen'));
+                $this->init_error(new E_INIT('konnte die Liste erlaubter Endgeräte nicht festelegen'));
                 }
             elseif (false === $this->check_interface())
                 {
-                $this->set_init_error(new E_INIT('konnte das Endgerät nicht prüfen'));
+                $this->init_error(new E_INIT('konnte das Endgerät nicht prüfen'));
                 }
             elseif (false === (PROTECT::getInstance()))
                 {
-                $this->set_init_error(new E_INIT('konnte keine gültige PROTECT-Klasse ableiten. Fehler beim Erzeugen der Instanz.'));
+                $this->init_error(new E_INIT('konnte keine gültige PROTECT-Klasse ableiten. Fehler beim Erzeugen der Instanz.'));
                 }
             elseif (false === PROTECT::getInstance()->protect())
                 {
-                $this->set_init_error(PROTECT::getInstance()->get_init_error());
+                $this->init_error(PROTECT::getInstance()->init_error());
                 }
             elseif(ini_get('log_errors') AND !ini_set('log_errors', false))
                 {
-                $this->set_init_error(new E_INIT('Konnte log_errors nicht deaktivieren'));
+                $this->init_error(new E_INIT('Konnte log_errors nicht deaktivieren'));
                 }
             elseif(ini_get('display_errors') AND !$this->mute(1))
                 {
-                $this->set_init_error(new E_INIT('Konnte mute-mode nicht aktivieren.'));
+                $this->init_error(new E_INIT('Konnte mute-mode nicht aktivieren.'));
                 }
             elseif (false === ($this->flag_is_configured = true))
                 {
-                $this->set_init_error(new E_INIT('konnte die Initialisierung von ' . SECUREPHP . ' nicht erfolgreich abschließen'));
+                $this->init_error(new E_INIT('konnte die Initialisierung von ' . SECUREPHP . ' nicht erfolgreich abschließen'));
                 }
 
-            if($e = $this->get_init_error())
+            if($e = $this->init_error())
                 {
-                $this->terminate($this->get_init_error());
+                $this->terminate($this->init_error());
+                return false;
                 }
             else
                 {
@@ -534,19 +446,24 @@ namespace AUTOFLOW\SECUREPHP
 
         /**
          * @param $e \Exception
+         * @throws \Exception | \Raisable | \RaisableError
          */
-        final private function terminate(\Exception $e)
+        final public function terminate(\Exception $e)
             {
             ERRORLOG::getInstance()->log($e, false);
             throw $e;
             }
 
         /**
+         * @param bool | NULL $flag_configured
          * @return bool
          */
         final public function is_configured($flag_configured = NULL)
 			{
-			if(NULL === $flag_configured) return $this->flag_is_configured;
+			if(NULL === $flag_configured)
+                {
+                return $this->flag_is_configured;
+                }
             else
                 {
                 $this->flag_is_configured = (bool) $flag_configured;
@@ -574,7 +491,7 @@ namespace AUTOFLOW\SECUREPHP
         /**
          * Versetzt SecurePHP zurück
          * in den Standardmodus.
-         *
+         * @param bool | NULL $enable
          * @return bool
          */
         final public function enabled($enable = NULL)
@@ -649,9 +566,11 @@ namespace AUTOFLOW\SECUREPHP
                 PROTECT::getInstance()->handle($restore_handle);
                 return true;
                 }
+            else return false;
             }
 
         /**
+         * @param bool|NULL $handle
          * @return bool
          */
         final public function mute($handle = NULL)
@@ -690,11 +609,15 @@ namespace AUTOFLOW\SECUREPHP
             }
 
         /**
+         * @param NULL|bool $mode
          * @return bool
          */
         final public function loose($mode = NULL)
             {
-            if(NULL === $mode) return PROTECT::getInstance()->mode();
+            if(NULL === $mode)
+                {
+                return PROTECT::getInstance()->mode();
+                }
             elseif((bool)$mode)
                 {
                 return PROTECT::getInstance()->mode(SECUREPHP_HANDLE_LOOSE);
@@ -734,7 +657,7 @@ namespace AUTOFLOW\SECUREPHP
             {
             if(false === ($this->wd = getcwd()))
                 {
-                $this->set_init_error(new E_INIT('konnte das aktuelle Arbeitsverzeichnis nicht ermitteln'));
+                $this->init_error(new E_INIT('konnte das aktuelle Arbeitsverzeichnis nicht ermitteln'));
                 return false;
                 }
             else return true;
@@ -749,7 +672,7 @@ namespace AUTOFLOW\SECUREPHP
             {
             if (realpath(getcwd()) != realpath(dirname(get_included_files()[0])))
                 {
-                $this->set_init_error(new E_INIT('das aktuelle Arbeitsverzeichnis (' . realpath(getcwd()) . ') und das Verzeichnis der ausgeführten Scriptdatei (' . realpath(dirname(get_included_files()[0])) . ') stimmen nicht überein'));
+                $this->init_error(new E_INIT('das aktuelle Arbeitsverzeichnis (' . realpath(getcwd()) . ') und das Verzeichnis der ausgeführten Scriptdatei (' . realpath(dirname(get_included_files()[0])) . ') stimmen nicht überein'));
                 return false;
                 }
             else return true;
@@ -782,38 +705,37 @@ namespace AUTOFLOW\SECUREPHP
 
         /**
          * @param \Exception $e
-         * @return bool
+         * @return bool | \Exception
          */
-        final private function set_init_error(\Exception $e)
+        final public function init_error(\Exception $e = NULL)
 			{
-            $this->init_error = $e;
-            return true;
-			}
+            if(NULL === $e)
+                {
+                return $this->init_error;
+                }
+            else
+                {
+                $this->init_error = $e;
+                return true;
+                }
 
-        /**
-         * @return \Exception
-         */
-        final public function get_init_error()
-			{
-			return $this->init_error;
 			}
 
         /**
          * @param \Exception $e
-         * @return bool
+         * @return bool | \Exception
          */
-        final private function set_error(\Exception $e)
+        final public function error(\Exception $e = NULL)
             {
-            $this->error = $e;
-            return true;
-            }
-
-        /**
-         * @return \Exception
-         */
-        final public function get_error()
-            {
-            return $this->error;
+            if(NULL == $e)
+                {
+                return $this->error;
+                }
+            else
+                {
+                $this->error = $e;
+                return true;
+                }
             }
 
         /**
@@ -917,12 +839,16 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function set_logfile($logfile=true)
 			{
-            if(false === (bool) $logfile) $this->logfile = false;
+            if(false === (bool) $logfile)
+                {
+                $this->logfile = false;
+                return true;
+                }
             elseif(!is_string($logfile) AND true === (bool) $logfile)
                 {
                 if(false === ($ext = pathinfo($this->get_script_name(), PATHINFO_EXTENSION)))
                     {
-                    $this->set_init_error(new E_INIT('allgemeiner Fehler beim Ermitteln der Dateiendung der Fehlerrdatei'));
+                    $this->init_error(new E_INIT('allgemeiner Fehler beim Ermitteln der Dateiendung der Fehlerrdatei'));
                     return false;
                     }
                 else
@@ -933,7 +859,7 @@ namespace AUTOFLOW\SECUREPHP
                 }
  			elseif(!is_string($logfile))
 				{
-				$this->set_init_error(new E_INIT("der Parameter #Referenz# mit Wert $logfile als Basis der Fehlerdatei ist ungültig"));
+				$this->init_error(new E_INIT("der Parameter #Referenz# mit Wert $logfile als Basis der Fehlerdatei ist ungültig"));
 				return false;
 				}
 			else
@@ -956,10 +882,13 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function set_error_log()
 			{
-            if(false === $this->get_logfile()) return true;
+            if(false === $this->get_logfile())
+                {
+                return true;
+                }
 			elseif(false === ini_set('error_log', $this->get_logfile()))
 				{
-				$this->set_init_error(new E_INIT("konnte die Log-Datei {$this->get_logfile()} nicht festlegen"));
+				$this->init_error(new E_INIT("konnte die Log-Datei {$this->get_logfile()} nicht festlegen"));
 				return false;
 				}
 			else return true;
@@ -979,10 +908,13 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function set_interfaces($interfaces)
 			{
-			if(NULL == $interfaces) return true;
+			if(NULL == $interfaces)
+                {
+                return true;
+                }
 			elseif(!is_string($interfaces)) 
 				{
-				$this->set_init_error(new E_INIT('Der für "interfaces" übergebene Wert ist keine gültige Liste von erlaubten Interfaces'));
+				$this->init_error(new E_INIT('Der für "interfaces" übergebene Wert ist keine gültige Liste von erlaubten Interfaces'));
 				return false;
 				}
 			else
@@ -1057,7 +989,6 @@ namespace AUTOFLOW\SECUREPHP
          */
         public $flag_in_progress                = false;
 
-
         /**
          * Letzter Laufzeitfehler.
          * @var \Exception
@@ -1101,8 +1032,12 @@ namespace AUTOFLOW\SECUREPHP
             if (NULL === static::$instance)
                 {
                 static::$instance = new static();
+                return static::$instance;
                 }
-            return static::$instance;
+            else
+                {
+                return static::$instance;
+                }
             }
 
 
@@ -1115,22 +1050,22 @@ namespace AUTOFLOW\SECUREPHP
             if ($this->is_protected())
                 {
                 return true;
-                } // Register first ..
-            elseif (false == $this->add_handler())
+                }
+            elseif(false == $this->add_handler())
                 {
                 if (false == $this->remove_handler())
                     {
                     $message = SECUREPHP . "konnte Fehlerbehandlungsroutinen nach Fehler nicht wieder freigeben";
-                    $this->set_init_error(new \E_INIT($message));
+                    $this->init_error(new E_INIT($message));
                     return false;
                     }
                 else
                     {
                     $message = SECUREPHP . "die Fehlerbehandlungsroutinen wurden fehlerhaft initialisiert";
-                    $this->set_init_error(new \E_INIT($message));
+                    $this->init_error(new E_INIT($message));
                     return false;
                     }
-                } // Then check ..
+                }
             else
                 {
                 $this->is_protected(true);
@@ -1143,8 +1078,14 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function display()
             {
-            if(BOOTSTRAP::getInstance()->debug()) return true;
-            elseif(SECUREPHP_HANDLE_PROMPT == $this->handle) return true;
+            if(BOOTSTRAP::getInstance()->debug())
+                {
+                return true;
+                }
+            elseif(SECUREPHP_HANDLE_PROMPT == $this->handle)
+                {
+                return true;
+                }
             else return false;
             }
 
@@ -1203,14 +1144,20 @@ namespace AUTOFLOW\SECUREPHP
 			}
 
         /**
-         * @param null $state
+         * @param null|int $handle
          * @return bool|int
          */
         final public function handle($handle = NULL)
             {
 
-            if(NULL === $handle) return $this->handle;
-            elseif(!is_int($handle)) return false;
+            if(NULL === $handle)
+                {
+                return $this->handle;
+                }
+            elseif(!is_int($handle))
+                {
+                return false;
+                }
             else
                 {
                 $this->handle = $handle;
@@ -1219,13 +1166,19 @@ namespace AUTOFLOW\SECUREPHP
             }
 
         /**
-         * @param null $state
+         * @param null|int $mode
          * @return bool|int
          */
         final public function mode($mode = NULL)
             {
-            if(NULL === $mode) return $this->mode;
-            elseif(!is_int($mode)) return false;
+            if(NULL === $mode)
+                {
+                return $this->mode;
+                }
+            elseif(!is_int($mode))
+                {
+                return false;
+                }
             else
                 {
                 $this->mode = $mode;
@@ -1243,11 +1196,11 @@ namespace AUTOFLOW\SECUREPHP
          *
          * Fatal Errors die hier entstehen sind im shutdown-handler verfügbar!
          *
-         * @param \Exception $e
+         * @param \Exception|\Raisable|\RaisableError $e
          * @return void
          * @throws \Exception
          */
-        final public function exception_handler(\Exception $e)
+        final public function exception_handler($e)
 			{
 
             #echo "exceptionhandler";
@@ -1273,7 +1226,6 @@ namespace AUTOFLOW\SECUREPHP
          * @param int $error_line
          * @param mixed $error_context
          * @return bool|NULL
-         * @throws E_RECURSION
          */
         final public function error_handler($error_level, $error_message, $error_file, $error_line, $error_context)
 			{
@@ -1333,8 +1285,9 @@ namespace AUTOFLOW\SECUREPHP
                 $error->set_note(CONFIG::getInstance()->_('php reported an error') .':' . $this->get_php_error($error_level)[0]);
 
                 $exit = 0;
+
                 if(SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode()) $mode = 'Strict-Mode';
-                else $mode = "Loose-Mode";
+                    else $mode = "Loose-Mode";
 
                 if(SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode())
                     {
@@ -1345,6 +1298,7 @@ namespace AUTOFLOW\SECUREPHP
                     {
                     if (SECUREPHP_EXIT_ON_ERROR == $this->get_php_error($error_level)[2]) $exit = 1;
                     }
+
                 $error->set_state(CONFIG::getInstance()->_('script run') . (!error_reporting() ? CONFIG::getInstance()->_('continued') . '(@)' : ($exit ? CONFIG::getInstance()->_('terminates') . ' ('.$mode.').' : CONFIG::getInstance()->_('continues') . ' ('.$mode.')')));
 
                 // Supressed by @
@@ -1427,11 +1381,13 @@ namespace AUTOFLOW\SECUREPHP
                 elseif(SECUREPHP_HANDLE_STRICT == PROTECT::getInstance()->mode())
                     {
                     if (SECUREPHP_EXIT_ON_ERROR == $this->get_php_error($error_level)[1]) exit(0);
+                    return true;
                     }
                 // else handle exit in loose mode
                 elseif(SECUREPHP_HANDLE_LOOSE == PROTECT::getInstance()->mode())
                     {
                     if (SECUREPHP_EXIT_ON_ERROR == $this->get_php_error($error_level)[2]) exit(0);
+                    return true;
                     }
                 }
 			}
@@ -1532,7 +1488,7 @@ namespace AUTOFLOW\SECUREPHP
         /**
          * Autoload von safemysqli & safeftp.
          *
-         * @param $class_name
+         * @param string $class
          * @return mixed
          */
         protected function autoload_handler($class)
@@ -1550,7 +1506,10 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function is_protected($flag_protected = NULL)
             {
-            if(NULL === $flag_protected) return $this->flag_is_protected;
+            if(NULL === $flag_protected)
+                {
+                return $this->flag_is_protected;
+                }
             else
                 {
                 $this->flag_is_protected = (bool) $flag_protected;
@@ -1564,7 +1523,10 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function in_progress($flag = NULL)
             {
-            if(NULL === $flag) return $this->flag_in_progress;
+            if(NULL === $flag)
+                {
+                return $this->flag_in_progress;
+                }
             else
                 {
                 $this->flag_in_progress = $flag;
@@ -1622,7 +1584,7 @@ namespace AUTOFLOW\SECUREPHP
             foreach($_users AS $user)
                 {
 
-                $user = trim($user);
+                $user = strtolower(trim($user));
 
                 if('all' == $user && 'all' == $users)
                     {
@@ -1644,21 +1606,29 @@ namespace AUTOFLOW\SECUREPHP
                     {
                     $order = explode('>', $user);
 
-                    foreach($order AS $user)
+                    foreach($order AS $__user)
                         {
-                        if("log" == $user AND true == ERRORLOG::getInstance()->log($e))
+                        if("log" == $__user AND true == ERRORLOG::getInstance()->log($e))
                             {
                             break;
                             }
-                        elseif($send AND "user" == $user AND true == $this->notify_user($e))
+                        elseif($send AND "user" == $__user AND true == $this->notify_user($e))
                             {
                             break;
                             }
-                        elseif($send AND "admin" == $user AND true == $this->notify_admin($e))
+                        elseif($send AND "admin" == $__user AND true == $this->notify_admin($e))
                             {
                             break;
                             }
-                        elseif($send AND true == $this->notify_cc($user, $e))
+                        elseif($send AND "cc" == $__user)
+                            {
+                            foreach (MAIl::getInstance()->userlist AS $name => $email)
+                                {
+                                $this->notify_cc($name, $e);
+                                }
+                            break;
+                            }
+                        elseif($send AND true == $this->notify_cc($__user, $e))
                             {
                             break;
                             }
@@ -1674,6 +1644,13 @@ namespace AUTOFLOW\SECUREPHP
                         {
                         $this->notify_user($e);
                         }
+                    elseif($send AND "cc" == $user)
+                        {
+                        foreach (MAIl::getInstance()->userlist AS $name => $email)
+                            {
+                            $this->notify_cc($name, $e);
+                            }
+                        }
                     elseif($send AND array_key_exists($user, MAIL::getInstance()->userlist))
                         {
                         $this->notify_cc($user, $e);
@@ -1688,7 +1665,7 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function notify_user(\Exception $e)
             {
-            return MAIL::getInstance()->send('user', $e);
+            return MAIL::getInstance()->forward('user', $e);
             }
 
         /**
@@ -1697,7 +1674,7 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function notify_admin(\Exception $e)
             {
-            return MAIL::getInstance()->send('admin', $e);
+            return MAIL::getInstance()->forward('admin', $e);
             }
 
         /**
@@ -1707,54 +1684,52 @@ namespace AUTOFLOW\SECUREPHP
          */
         final private function notify_cc($user, \Exception $e)
             {
-            return MAIL::getInstance()->send($user, $e);
+            return MAIL::getInstance()->forward($user, $e);
             }
 
         // PROTECT GETTER & SETTER
 
         /**
-         * @param \Exception $error
-         * @return bool
+         * @param \Exception $e
+         * @return bool | \Exception
          */
-        final private function set_init_error(\Exception $error)
+        final public function init_error(\Exception $e = NULL)
             {
-            $this->init_error = $error;
-            return true;
-            }
-
-        /**
-         * @return string
-         */
-        final public function get_init_error()
-            {
-            return $this->init_error;
+            if(NULL === $e)
+                {
+                return $this->init_error;
+                }
+            else
+                {
+                $this->init_error = $e;
+                return true;
+                }
             }
 
         /**
          * @param string $text
-         * @return bool
+         * @return bool | string
          */
-       final private function set_error($text)
+       final public function error($text = NULL)
             {
-            $trace = debug_backtrace(NULL, 3);
-            $prev = $trace[1];
-            $before = "";
-            if(isset($trace[2]))
+            if(NULL === $text)
                 {
-                $before = $trace[2];
-                $before = sprintf(", aufgerufen durch: %s #%s (%s::%s())", __FILE__, $prev['line'], __CLASS__, $before['function']);
+                return $this->error;
                 }
-            $string = SECUREPHP . " Startfehler in %s #%s (%s::%s()) mit der Nachricht: " . $text . $before;
-            $this->error = sprintf($string, __FILE__, $prev['line'], __CLASS__, $prev['function']);
-            return true;
-            }
-
-        /**
-         * @return string
-         */
-        final public function get_error()
-            {
-            return $this->error;
+            else
+                {
+                $trace = debug_backtrace(NULL, 3);
+                $prev = $trace[1];
+                $before = "";
+                if (isset($trace[2]))
+                    {
+                    $before = $trace[2];
+                    $before = sprintf(", aufgerufen durch: %s #%s (%s::%s())", __FILE__, $prev['line'], __CLASS__, $before['function']);
+                    }
+                $string = SECUREPHP . " Startfehler in %s #%s (%s::%s()) mit der Nachricht: " . $text . $before;
+                $this->error = sprintf($string, __FILE__, $prev['line'], __CLASS__, $prev['function']);
+                return true;
+                }
             }
 
         /**
@@ -1859,7 +1834,7 @@ namespace AUTOFLOW\SECUREPHP
         /**
          * @var \CLOSURE
          */
-        public $shutdown_function               = false;
+        public $shutdown_function = false;
 
         /**
          * @var static
@@ -1880,18 +1855,12 @@ namespace AUTOFLOW\SECUREPHP
             if (NULL === static::$instance)
                 {
                 static::$instance = new static();
+                return static::$instance;
                 }
-            return static::$instance;
-            }
-
-        /**
-         * @param \Exception $e
-         * @throws \Exception
-         */
-        final public function terminate(\Exception $e)
-            {
-            ERRORLOG::getInstance()->log($e, false);
-            throw $e;
+            else
+                {
+                return static::$instance;
+                }
             }
 
         /**
@@ -1966,14 +1935,17 @@ namespace AUTOFLOW\SECUREPHP
 
         /**
          * @param string $token
-         * @param null $language
+         * @param string|NULL $language
          * @param array $args
          * @return string
          */
-        final public function _($token, $language = 'en_EN', $args=ARRAY())
+        final public function _($token, $language = NULL, $args=ARRAY())
             {
-            $language = $this->locale;
-            if(false == DB::getInstance()->is_ready()) return $token;
+            $language = ( $language ? : $this->locale );
+            if(false == DB::getInstance()->is_ready())
+                {
+                return $token;
+                }
             else
                 {
                 $result = DB::getInstance()->server->query("SELECT * FROM translations WHERE token = '$token'");
@@ -1998,8 +1970,9 @@ namespace AUTOFLOW\SECUREPHP
             {
             if(false == (PROTECT::getInstance()->set_app($name)))
                 {
-                $this->config_error = PROTECT::getInstance()->get_error();
-                $this->terminate($this->config_error);
+                $this->config_error = PROTECT::getInstance()->error();
+                BOOTSTRAP::getInstance()->terminate($this->config_error);
+                return false;
                 }
             else return true;
             }
@@ -2010,10 +1983,11 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function timeout($timeout)
             {
-            if(false == (TIMEOUT::getInstance()->set_timeout($timeout)))
+            if(false == (TIMEOUT::getInstance()->timeout($timeout)))
                 {
-                $this->config_error = TIMEOUT::getInstance()->get_error();
-                $this->terminate($this->config_error);
+                $this->config_error = TIMEOUT::getInstance()->error();
+                BOOTSTRAP::getInstance()->terminate($this->config_error);
+                return false;
                 }
             else return true;
             }
@@ -2025,10 +1999,11 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function reminder($timeout)
             {
-            if(false == (TIMEOUT::getInstance()->set_reminder($timeout)))
+            if(false == (TIMEOUT::getInstance()->reminder($timeout)))
                 {
-                $this->config_error = TIMEOUT::getInstance()->get_error();
-                $this->terminate($this->config_error);
+                $this->config_error = TIMEOUT::getInstance()->error();
+                BOOTSTRAP::getInstance()->terminate($this->config_error);
+                return false;
                 }
             else return true;
             }
@@ -2041,8 +2016,9 @@ namespace AUTOFLOW\SECUREPHP
             {
             if(false == MAIL::getInstance()->set_from($from))
                 {
-                $this->config_error = MAIL::getInstance()->get_error();
-                $this->terminate($this->config_error);
+                $this->config_error = MAIL::getInstance()->error();
+                BOOTSTRAP::getInstance()->terminate($this->config_error);
+                return false;
                 }
             else return true;
             }
@@ -2051,17 +2027,19 @@ namespace AUTOFLOW\SECUREPHP
          * @param string $admin
          * @return bool
          */
-        final public function admin($admin)
+        final public function admins($admin)
             {
             if(false == MAIL::getInstance()->is_ready() AND false == BOOTSTRAP::getInstance()->startmail())
                 {
-                $this->config_error = new E_INIT('konnte Mail-Admin nicht setzen. Mail-Init fehlerhaft.', false, MAIL::getInstance()->get_init_error());
-                $this->terminate($this->config_error);
+                $this->config_error = new E_INIT('konnte Mail-Admin nicht setzen. Mail-Init fehlerhaft.', false, MAIL::getInstance()->init_error());
+                BOOTSTRAP::getInstance()->terminate($this->config_error);
+                return false;
                 }
             elseif(false == (MAIL::getInstance()->set_admin($admin)))
                 {
-                $this->config_error = MAIL::getInstance()->get_error();
-                $this->terminate($this->config_error);
+                $this->config_error = MAIL::getInstance()->error();
+                BOOTSTRAP::getInstance()->terminate($this->config_error);
+                return false;
                 }
             else return true;
             }
@@ -2070,18 +2048,18 @@ namespace AUTOFLOW\SECUREPHP
          * @param string $user
          * @return bool
          */
-        final public function user($user)
+        final public function users($user)
             {
             if(false == MAIL::getInstance()->is_ready() AND false == BOOTSTRAP::getInstance()->startmail())
                 {
-                $this->config_error = new E_INIT('konnte Mail-Benutzer nicht setzen. Mail-Init fehlerhaft.', false, MAIL::getInstance()->get_init_error());
-                $this->terminate($this->config_error);
+                $this->config_error = new E_INIT('konnte Mail-Benutzer nicht setzen. Mail-Init fehlerhaft.', false, MAIL::getInstance()->init_error());
+                BOOTSTRAP::getInstance()->terminate($this->config_error);
                 return false;
                 }
             elseif(false == (MAIL::getInstance()->set_user($user)))
                 {
-                $this->config_error = MAIL::getInstance()->get_error();
-                $this->terminate($this->config_error);
+                $this->config_error = MAIL::getInstance()->error();
+                BOOTSTRAP::getInstance()->terminate($this->config_error);
                 return false;
                 }
             else return true;
@@ -2092,18 +2070,18 @@ namespace AUTOFLOW\SECUREPHP
          * @param string $email
          * @return bool
          */
-        final public function add_cc($user, $email)
+        final public function cc($user, $email)
             {
             if(false == MAIL::getInstance()->is_ready() AND false == BOOTSTRAP::getInstance()->startmail())
                 {
-                $this->config_error = new E_INIT('konnte Mail-Benutzer nicht setzen. Mail-Init fehlerhaft.', false, MAIL::getInstance()->get_init_error());
-                $this->terminate($this->config_error);
+                $this->config_error = new E_INIT('konnte Mail-Benutzer nicht setzen. Mail-Init fehlerhaft.', false, MAIL::getInstance()->init_error());
+                BOOTSTRAP::getInstance()->terminate($this->config_error);
                 return false;
                 }
             elseif(false == MAIL::getInstance()->add_cc($user, $email))
                 {
-                $this->config_error = MAIL::getInstance()->get_error();
-                $this->terminate($this->config_error);
+                $this->config_error = MAIL::getInstance()->error();
+                BOOTSTRAP::getInstance()->terminate($this->config_error);
                 return false;
                 }
             else return true;
@@ -2111,7 +2089,7 @@ namespace AUTOFLOW\SECUREPHP
 
 
         /**
-         * @param null $bool
+         * @param null $flag
          * @return bool
          */
         final public function merge($flag=NULL)
@@ -2203,8 +2181,12 @@ namespace AUTOFLOW\SECUREPHP
 			if (null === static::$instance)
                 {
 				static::$instance = new static();
+                return static::$instance;
 			    }
-			return static::$instance;
+			else
+                {
+                return static::$instance;
+                }
 			}
 
         /**
@@ -2251,7 +2233,7 @@ namespace AUTOFLOW\SECUREPHP
                     }
 
                 // Display errors when in PROMPT mode
-                if(PROTECT::getInstance()->display() OR $flag_prompt)
+                if(PROTECT::getInstance()->display() AND $flag_prompt)
                     {
                     $head = '';
                     #$head .= '-> todisplay';
@@ -2394,10 +2376,15 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public static function getInstance()
 			{
-			if (null === static::$instance) {
+			if (null === static::$instance)
+                {
 				static::$instance = new static();
-			}
-			return static::$instance;
+                return static::$instance;
+			    }
+			else
+                {
+                return static::$instance;
+                }
 			}
 
         /**
@@ -2413,17 +2400,17 @@ namespace AUTOFLOW\SECUREPHP
                 }
             elseif (false || in_array('mail', explode(';', ini_get('disable_functions'))))
                 {
-                $this->set_init_error(new E_INIT('Email-Funktion steht nicht zur Verfügung. PHP::mail() ist nicht aktiviert'));
+                $this->init_error(new E_INIT('Email-Funktion steht nicht zur Verfügung. PHP::mail() ist nicht aktiviert'));
                 return false;
                 }
             elseif(!$this->get_from())
                 {
-                $this->set_init_error(new E_CONFIG('Email nicht konfiguriert. sendmail_from fehlerhaft oder nicht angegeben'));
+                $this->init_error(new E_CONFIG('Email nicht konfiguriert. sendmail_from fehlerhaft oder nicht angegeben'));
                 return false;
                 }
             elseif (false == TIMEOUT::getInstance()->init())
                 {
-                $this->set_init_error(new E_CONFIG('Email-Funktion steht nicht zur Verfügung. Konnte Timeout-Instanz nicht starten'), false, TIMEOUT::getInstance()->get_init_error());
+                $this->init_error(new E_CONFIG('Email-Funktion steht nicht zur Verfügung. Konnte Timeout-Instanz nicht starten'), false, TIMEOUT::getInstance()->init_error());
                 return false;
                 }
             else
@@ -2438,7 +2425,10 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function is_required()
 			{
-			if(!empty($this->user) || !empty($this->admin) || 0 < count($this->userlist)) return true;
+			if(!empty($this->user) || !empty($this->admin) || 0 < count($this->userlist))
+                {
+                return true;
+                }
 			else return false;
 			}
 
@@ -2448,7 +2438,10 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function is_ready($flag_ready = NULL)
             {
-            if(NULL === $flag_ready) return $this->flag_is_ready;
+            if(NULL === $flag_ready)
+                {
+                return $this->flag_is_ready;
+                }
             else
                 {
                 $this->flag_is_ready = (bool) $flag_ready;
@@ -2465,12 +2458,12 @@ namespace AUTOFLOW\SECUREPHP
 			{
             if(false == (filter_var(trim($email), FILTER_VALIDATE_EMAIL)))
                 {
-                $this->set_error(new E_CONFIG($email . ' besitzt ein ungültiges Format'));
+                $this->error(new E_CONFIG($email . ' besitzt ein ungültiges Format'));
                 return false;
                 }
 			elseif ($flag_validate_mx && !checkdnsrr($email, 'MX'))
 				{
-                $this->set_error(new E_CONFIG($email . ' ist nicht erreichbar'));
+                $this->error(new E_CONFIG($email . ' ist nicht erreichbar'));
 				return false;
 				}
 			else return true;
@@ -2482,25 +2475,25 @@ namespace AUTOFLOW\SECUREPHP
          * @return bool;
          * @throws \Exception
          */
-        final public function send($user, \Exception $e)
+        final public function forward($user, \Exception $e)
             {
             if(SECUREPHP_HANDLE_MUTE == PROTECT::getInstance()->handle()) return NULL;
             elseif(false ==($data = MAIL::getInstance()->get_mail_data($e))) return false;
             elseif('admin' == $user)
                 {
                 if(empty($this->get_admin())) return NULL;
-                else return $this->forward($this->get_admin(), $data->header, $data->message);
+                else return $this->sendto($this->get_admin(), $data->header, $data->message);
                 }
             elseif('user' == $user)
                 {
                 if(empty($this->get_user())) return NULL;
-                else return $this->forward($this->get_user(), $data->header, $data->message);
+                else return $this->sendto($this->get_user(), $data->header, $data->message);
                 }
             elseif(false == ($mail = $this->get_cc_by_name($user)))
                 {
                 return false;
                 }
-            else return $this->forward($mail, $data->header, $data->message);
+            else return $this->sendto($mail, $data->header, $data->message);
 
             }
 
@@ -2511,7 +2504,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param string $from
          * @return bool|NULL
          */
-        public function forward($to, $subject, $message, $from=NULL)
+        public function sendto($to, $subject, $message, $from=NULL)
             {
 
             if(!empty($DEBUG)) return NULL;
@@ -2519,7 +2512,7 @@ namespace AUTOFLOW\SECUREPHP
             if($this->count > 3)
                 {
                 $message = 'max. Anzahhl von Emails versendet.';
-                ERRORLOG::getInstance()->log(new E_NOTICE($message));
+                ERRORLOG::getInstance()->log(new E_CONFIG($message));
                 return false;
                 }
             else $this->count++;
@@ -2527,7 +2520,7 @@ namespace AUTOFLOW\SECUREPHP
             if(empty($to))
                 {
                 $message = 'Email-Empfänger nicht angegeben. Nachricht: ' . $message;
-                ERRORLOG::getInstance()->log(new E_NOTICE($message));
+                ERRORLOG::getInstance()->log(new E_CONFIG($message));
                 return false;
                 }
 
@@ -2548,43 +2541,41 @@ namespace AUTOFLOW\SECUREPHP
         // MAIL GETTERS & SETTERS
 
         /**
-         * @param \Exception
-         * @return bool
+         * @param \Exception | NULL $e
+         * @return bool | \Exception
          */
-        final private function set_init_error(\Exception $e)
+        final public function init_error($e = NULL)
             {
-            $this->init_error = $e;
-            return true;
+            if(NULL === $e)
+                {
+                return $this->init_error;
+                }
+            else
+                {
+                $this->init_error = $e;
+                return true;
+                }
             }
 
         /**
-         * @return \Exception
+         * @param \Exception | NULL $e
+         * @return bool | \Exception
          */
-        final public function get_init_error()
+        final public function error($e = NULL)
             {
-            return $this->init_error;
+            if(NULL === $e)
+                {
+                return $this->error;
+                }
+            else
+                {
+                $this->error = $e;
+                return true;
+                }
             }
 
         /**
-         * @param \Exception
-         * @return bool
-         */
-        final private function set_error($e)
-            {
-            $this->error = $e;
-            return true;
-            }
-
-        /**
-         * @return \Exception
-         */
-        final public function get_error()
-            {
-            return $this->error;
-            }
-
-        /**
-         * @param \Exception $e
+         * @param \Exception|\RAISABLE $e
          * @return \stdClass
          */
         final public function get_mail_data(\Exception $e)
@@ -2594,7 +2585,7 @@ namespace AUTOFLOW\SECUREPHP
                 $header = $e->get_mail_header();
                 $message = $e->get_mail_message();
                 }
-            elseif(is_a($e, 'PhpRunTimeError'))
+            elseif(is_a($e, 'PhpError'))
                 {
                 $header = $e->get_mail_header();
                 $message = $e->get_mail_message();
@@ -2628,7 +2619,7 @@ namespace AUTOFLOW\SECUREPHP
 			#if(false == $this->check_email($from)) trigger_error('Invalid from address', E_USER_ERROR);
             if(false == ($this->from = $from))
                 {
-                $this->set_error( new E_CONFIG('Email-From nicht angegeben.'));
+                $this->error( new E_CONFIG('Email-From nicht angegeben.'));
                 return false;
                 }
             else return true;
@@ -2648,7 +2639,10 @@ namespace AUTOFLOW\SECUREPHP
          */
         public function set_admin($admin)
 			{
-            if(false == $this->getInstance()) return false;
+            if(false == $this->getInstance())
+                {
+                return false;
+                }
             else
                 {
                 $emails = explode(',', $admin);
@@ -2656,7 +2650,7 @@ namespace AUTOFLOW\SECUREPHP
                     {
                     if(false == $this->validate_email($mail))
                         {
-                        $this->set_error(new \E_CONFIG('ungültige Administrator-Email', false, $this->get_error()->getMessage()));
+                        $this->error(new E_CONFIG('ungültige Administrator-Email', false, $this->error()));
                         return false;
                         }
                     }
@@ -2687,7 +2681,7 @@ namespace AUTOFLOW\SECUREPHP
                     {
                     if(false == $this->validate_email($mail))
                         {
-                        $this->set_error(new \CONFIGERROR('Ungültige Mitarbeiter-Email: ', false,  $this->get_error()->getMessage()));
+                        $this->error(new E_CONFIG('Ungültige Mitarbeiter-Email: ', false,  $this->error()));
                         return false;
                         }
                     }
@@ -2715,14 +2709,15 @@ namespace AUTOFLOW\SECUREPHP
             if(false == $this->getInstance()) return false;
             else
                 {
-                if("admin" == $name || "user" == $name || "log" == $name)
+                $name = strtolower($name);
+                if("admin" == $name || "user" == $name || "cc" == $name || "log" == $name)
                     {
-                    $this->set_error(new E_CONFIG($name . ' kann nicht als Benutzername verwendet werden.'));
+                    $this->error(new E_CONFIG($name . ' kann nicht als Benutzername verwendet werden.'));
                     return false;
                     }
                 elseif(false == $this->validate_email(trim($email)))
                     {
-                    $this->set_error(new E_CONFIG('Ungültige Email für den Benutzer "' . $name . '" (' . $this->get_error()->getMessage() . ')'));
+                    $this->error(new E_CONFIG('Ungültige Email für den Benutzer "' . $name . '" (' . $this->error()->getMessage() . ')'));
                     return false;
                     }
                 else $this->userlist[$name] = $email;
@@ -2737,14 +2732,14 @@ namespace AUTOFLOW\SECUREPHP
         public function get_cc_mail($name)
             {
 
-            if('users' == $name || 'admin' == $name || 'log' == $name)
+            if('users' == $name || 'admin' == $name || 'cc' == $name || 'log' == $name)
                 {
-                $this->set_error(new E_CONFIG($name . 'ist ein ungültiger Benutzername'));
+                $this->error(new E_CONFIG($name . 'ist ein ungültiger Benutzername'));
                 return false;
                 }
             if(!array_key_exists($name, $this->userlist))
                 {
-                $this->set_error(new E_CONFIG($name . ': kein Benutzer mit diesem Namen vorhanden'));
+                $this->error(new E_CONFIG($name . ': kein Benutzer mit diesem Namen vorhanden'));
                 return false;
                 }
             return $this->userlist[$name];
@@ -2756,10 +2751,13 @@ namespace AUTOFLOW\SECUREPHP
          */
         public function get_cc_by_name($user)
 			{
-			if(array_key_exists($user, $this->userlist)) return $this->userlist[$user];
+			if(array_key_exists($user, $this->userlist))
+                {
+                return $this->userlist[$user];
+                }
 			else
                 {
-                $this->set_error(new E_CONFIG($user . 'ist kein vorhandener Benutzername'));
+                $this->error(new E_CONFIG($user . 'ist kein vorhandener Benutzername'));
                 return false;
                 }
 			}
@@ -2830,8 +2828,12 @@ namespace AUTOFLOW\SECUREPHP
             if (null === static::$instance)
                 {
                 static::$instance = new static();
+                return static::$instance;
                 }
-            return static::$instance;
+            else
+                {
+                return static::$instance;
+                }
             }
 
         /**
@@ -2840,15 +2842,18 @@ namespace AUTOFLOW\SECUREPHP
          */
         final public function init()
             {
-            if($this->is_ready()) return true;
+            if($this->is_ready())
+                {
+                return true;
+                }
             elseif(false === ($result = DB::getInstance()->server->query("SELECT * FROM timeout")))
                 {
-                $this->set_init_error(new E_INIT('Timout-Datenbankabfrage ungültig'));
+                $this->init_error(new E_INIT('Timout-Datenbankabfrage ungültig'));
                 return false;
                 }
             elseif (!($result instanceof \Sqlite3Result))
                 {
-                $this->set_init_error(new E_INIT('Timout-Datenbankantwort ungültig'));
+                $this->init_error(new E_INIT('Timout-Datenbankantwort ungültig'));
                 return false;
                 }
             else
@@ -2861,7 +2866,7 @@ namespace AUTOFLOW\SECUREPHP
 
             if ("" != $this->data && !is_array($this->data))
                 {
-                $this->set_init_error(new E_INIT('Timeout-Daten ungültig.'));
+                $this->init_error(new E_INIT('Timeout-Daten ungültig.'));
                 return false;
                 }
             else
@@ -2877,17 +2882,17 @@ namespace AUTOFLOW\SECUREPHP
          * - vermeidet Wiederholungsfehler durch Timeout-Parameter.
          * - vermeidet das Versenden falscher Fehlerberichte.
          *
-         * @param \Exception $e
+         * @param \Exception|\RAISABLE $e
          * @param int $timeout
          * @return bool
          */
-        final public function check(\Exception $e, $timeout=NULL)
+        final public function check($e, $timeout=NULL)
             {
 
             $message    = $e->getMessage();
             $starttime  = BOOTSTRAP::$starttime;
             $file       = BOOTSTRAP::getInstance()->get_script_path();
-            $line       = $e->getLine();
+            #$line       = $e->getLine();
 
             // Wenn ein Fehler in der TIMEOUT-Klasse vorliegt sende keine Emails!
             #if($this->flag_error) return false;
@@ -2905,14 +2910,13 @@ namespace AUTOFLOW\SECUREPHP
             elseif(NULL === $timeout) $timeout = $this->timeout;
 
             // Individuelle Timeout-Angaben werden noch nicht unterstützt.
-            // @todo implement feature
             elseif(!empty($timeout))
                 {
-                return true;
+                #return true;
                 }
 
             // Reminder festlegen
-            if($reminder = $this->get_reminder());
+            if($reminder = $this->reminder());
             else $reminder = 60 * 30;
 
 
@@ -2967,6 +2971,7 @@ namespace AUTOFLOW\SECUREPHP
                 $lasttime = $data[0];
                 $attempts = $data[1];
                 $warning = $data[2];
+                $timeout = $data[5];
                 $reminder = $data[6];
                 $id = $data[9];
 
@@ -2994,9 +2999,9 @@ namespace AUTOFLOW\SECUREPHP
                             $report = new \Reminder(CONFIG::getInstance()->_('reminder'),CONFIG::getInstance()->_('reminder status', false, array( $this->sec2min($reminder) )));
                             $report->send_to($e->get_send_to());
                             $report->params["md5"]      = $key;
-                            $report->params["attempts"] = $attempts . " Wiederholungsfehler bisher";
+                            $report->params["attempts"] = $attempts;
                             $report->params["lasttime"] = date('d-M-Y H:i:s', $lasttime);
-                            $report->params["timeout"]  = $timeout . ' Sekunden';
+                            $report->params["timeout"]  = $timeout;
                             $report->add($e);
 
                             $this->data[$id][0] = $starttime;
@@ -3053,6 +3058,18 @@ namespace AUTOFLOW\SECUREPHP
                 }
             }
 
+        /**
+         * @param $key
+         * @param $lasttime
+         * @param $attempts
+         * @param $warning
+         * @param $file
+         * @param $line
+         * @param $timeout
+         * @param $reminder
+         * @param $message
+         * @return bool|int
+         */
         final private function add($key, $lasttime, $attempts, $warning, $file, $line, $timeout, $reminder, $message)
             {
             try
@@ -3069,12 +3086,12 @@ namespace AUTOFLOW\SECUREPHP
                 $statement->bindValue(':message', $message);
                 $statement->execute();
 
-                return $this->db->lastInsertRowID();
+                return DB::getInstance()->server->lastInsertRowID();
 
                 }
             catch(\Exception $e)
                 {
-                $this->set_init_error($e);
+                $this->init_error($e);
                 return false;
                 }
             }
@@ -3127,8 +3144,8 @@ namespace AUTOFLOW\SECUREPHP
                         {
                         unset($this->data[$id]);
                         DB::getInstance()->server->exec("DELETE FROM timeout WHERE id = '$id'");
-                        return true;
                         }
+                    return true;
                     }
                 else return true;
                 }
@@ -3141,12 +3158,12 @@ namespace AUTOFLOW\SECUREPHP
          */
         final protected function select($key, $file)
             {
-            $a = $this->data;
             $b = array_map(function($row) use ($key, $file)
                 {
                 if($row[8] == $key AND $row[3] == $file) return $row;
-                }, $a);
-            return array_shift($b);
+                }, $this->data);
+            $b = array_shift($b);
+            return $b;
             }
 
         /**
@@ -3159,11 +3176,15 @@ namespace AUTOFLOW\SECUREPHP
             }
 
         /**
+         * @param bool $flag_ready
          * @return bool
          */
         final public function is_ready($flag_ready = NULL)
             {
-            if(NULL === $flag_ready) return $this->flag_is_ready;
+            if(NULL === $flag_ready)
+                {
+                return $this->flag_is_ready;
+                }
             else
                 {
                 $this->flag_is_ready = (bool) $flag_ready;
@@ -3174,50 +3195,52 @@ namespace AUTOFLOW\SECUREPHP
         // TIMEOUT GETTERS & SETTERS
 
         /**
-         * @param \Exception $e
-         * @return bool
+         * @param \Exception | NULL $e
+         * @return bool | \Exception
          */
-        final private function set_init_error(\Exception $e)
+        final public function init_error(\Exception $e = NULL)
             {
-            $this->init_error = $e;
-            return true;
-            }
-
-        /**
-         * @return bool|\Exception
-         */
-        final public function get_init_error()
-            {
-            return $this->init_error;
-            }
-
-        /**
-         * @param \Exception $e
-         * @return bool
-         */
-        final private function set_error(\Exception $e)
-            {
-            $this->error = $e;
-            return true;
-            }
-
-        /**
-         * @return bool|\Exception
-         */
-        final public function get_error()
-            {
-            return $this->error;
-            }
-
-        /**
-         * @param int $timeout
-         * @return bool
-         */
-        final public function set_timeout($timeout)
-            {
-            if(!is_int($timeout))
+            if(NULL === $e)
                 {
-                $this->set_error(new \CONFIGERROR('ungültiger Integer-Wert für Timeout übergeben'));
+                return $this->init_error;
+                }
+            else
+                {
+                $this->init_error = $e;
+                return true;
+                }
+            }
+
+        /**
+         * @param \Exception | NULL $e
+         * @return bool | \Exception
+         */
+        final public function error(\Exception $e = NULL)
+            {
+            if(NULL === $e)
+                {
+                return $this->error;
+                }
+            else
+                {
+                $this->error = $e;
+                return true;
+                }
+            }
+
+        /**
+         * @param int | NULL $timeout
+         * @return bool
+         */
+        final public function timeout($timeout = NULL)
+            {
+            if(NULL === $timeout)
+                {
+                return $this->timeout;
+                }
+            elseif(!is_int($timeout))
+                {
+                $this->error(new \CONFIGERROR('ungültiger Integer-Wert für Timeout übergeben'));
                 return false;
                 }
             else
@@ -3228,37 +3251,25 @@ namespace AUTOFLOW\SECUREPHP
             }
 
         /**
-         * @return int | NULL
+         * @param int | NULL $reminder
+         * @return NULL | int
          */
-        final public function get_timeout()
+        final public function reminder($reminder = NULL)
             {
-            return $this->timeout;
-            }
-
-        /**
-         * @param int $timeout
-         * @return NULL|int
-         */
-        final public function set_reminder($timeout)
-            {
-            if(!is_int($timeout))
+            if(NULL === $reminder)
                 {
-                $this->set_error(new \CONFIGERROR('ungültiger Integer-Wert für Reminder übergeben'));
+                return $this->reminder;
+                }
+            elseif(!is_int($reminder))
+                {
+                $this->error(new \CONFIGERROR('ungültiger Integer-Wert für Reminder übergeben'));
                 return false;
                 }
             else
                 {
-                $this->reminder = $timeout;
+                $this->reminder = $reminder;
                 return true;
                 }
-            }
-
-        /**
-         * @return int | NULL
-         */
-        final public function get_reminder()
-            {
-            return $this->reminder;
             }
 
         } // final class TIMEOUT
@@ -3308,27 +3319,30 @@ namespace AUTOFLOW\SECUREPHP
             if (null === static::$instance)
                 {
                 static::$instance = new static();
+                return static::$instance;
                 }
-            return static::$instance;
+            else
+                {
+                return static::$instance;
+                }
             }
 
         /**
          * @return bool
-         * @throws \INITERROR
          */
         final public function init()
             {
 
             if($this->is_ready()) return true;
-            elseif(!$db = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'securephp.sqlite');
+            elseif(!$db = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'securephp.sqlite') return false;
             elseif(!file_exists($db))
                 {
-                $this->set_init_error(new E_INIT('konnte ' . SECUREPHP . '-Datenbank nicht erstellen.', false, $this->get_init_error()));
+                $this->init_error(new E_INIT('konnte ' . SECUREPHP . '-Datenbank nicht erstellen.', false, $this->init_error()));
                 return false;
                 }
             elseif(false == class_exists('SQLite3'))
                 {
-                $this->set_init_error(new E_INIT('SQLITE3 Datenbanktreiber nicht installiert.'));
+                $this->init_error(new E_INIT('SQLITE3 Datenbanktreiber nicht installiert.'));
                 return false;
                 }
             else
@@ -3340,9 +3354,10 @@ namespace AUTOFLOW\SECUREPHP
                     }
                 catch (\Exception $e)
                     {
-                    $this->set_init_error(new E_INIT('konnte ' . SECUREPHP . '-Datenbank nicht starten.', 0, $e));
+                    $this->init_error(new E_INIT('konnte ' . SECUREPHP . '-Datenbank nicht starten.', 0, $e));
                     return false;
                     }
+
                 }
             }
 
@@ -3363,25 +3378,21 @@ namespace AUTOFLOW\SECUREPHP
         // DB GETTERS & SETTERS
 
         /**
-         * @param \Exception $e
-         * @return bool|\Exception
+         * @param NULL | \Exception $e
+         * @return bool | \Exception
          */
-        final public function set_init_error(\Exception $e)
+        final public function init_error(\Exception $e = NULL)
             {
-            if($e)
+            if(NULL === $e)
+                {
+                return $this->init_error;
+                }
+            elseif($e)
                 {
                 $this->init_error = $e;
                 return true;
                 }
             else return false;
-            }
-
-        /**
-         * @return Exception
-         */
-        final public function get_init_error()
-            {
-            return $this->init_error;
             }
 
         } // final class DB
