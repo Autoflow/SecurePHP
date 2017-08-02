@@ -213,7 +213,7 @@ namespace AUTOFLOW\SECUREPHP
          * Datumsformatierung.
          * @var string
          */
-        public static $date = '[d-M-Y H:i:s] ';
+        public static $date = '[d-M-Y H:i:s]';
 
         /**
          * @var string
@@ -2119,14 +2119,22 @@ namespace AUTOFLOW\SECUREPHP
                 {
                 return $this->locale;
                 }
-            elseif('t' == strtolower($env))
+            elseif('t' == strtolower($env) OR 'test' == strtolower($env))
                 {
                 BOOTSTRAP::$date = '\J\a\n\u\a\r\y 1, 1970';
+                $this->locale = "test";
                 return true;
                 }
             elseif('de' == substr(strtolower($env), 0, 2))
                 {
                 $this->locale = "de_DE";
+                BOOTSTRAP::$date = '[d-M-Y H:i:s]';
+                return true;
+                }
+            elseif('en' == substr(strtolower($env), 0, 2))
+                {
+                $this->locale = "en_EN";
+                BOOTSTRAP::$date = '[Y-M-d H:i:s]';
                 return true;
                 }
             else return NULL;
