@@ -128,9 +128,10 @@ namespace
             }
 
         /**
+         * @param \Exception | \RAISABLE_TRAIT | \BatchReport $e
          * @return string
          */
-        final public function toString(\Exception $e)
+        final public function toString($e)
             {
 
             $message = '';
@@ -144,7 +145,7 @@ namespace
                     ("* %s %s %s, %s %s" . SECUREPHP_LINE_BREAK,
                     SECUREPHP\CONFIG::getInstance()->_($e->description),
                     SECUREPHP\CONFIG::getInstance()->_('within'),
-                    $e->getFile(),
+                    ('test' == SECUREPHP\CONFIG::getInstance()->locale() ? basename($e->getFile()) : $e->getFile()),
                     SECUREPHP\CONFIG::getInstance()->_('line'),
                     $e->getLine()
                     );
@@ -305,8 +306,15 @@ namespace
          */
         final public function details($flag = NULL)
             {
-            if(NULL === $flag) return (bool) $this->flag_details;
-            else $this->flag_details = (bool) $flag;
+            if(NULL === $flag)
+                {
+                return (bool) $this->flag_details;
+                }
+            else
+                {
+                $this->flag_details = (bool) $flag;
+                return true;
+                }
             }
 
         /**
@@ -382,6 +390,7 @@ namespace
             }
 
         /**
+         * @param array[]
          * @return bool
          */
         final public function add_params(ARRAY $params)
@@ -499,11 +508,11 @@ namespace
             }
 
         /**
-         * @param \Exception $e
+         * @param \Exception | \Raisable | \RaisableError | \BatchReport $e
          * @param string|null $level
          * @return string
          */
-        final public function get_mail_message_previous(\Exception $e, $level = NULL)
+        final public function get_mail_message_previous($e, $level = NULL)
             {
 
             $level = ($level ? chr(ord($level) + 1) : 'A');
@@ -560,7 +569,6 @@ namespace
             }
 
         /**
-         * @param $e \Exception
          * @return string
          */
         final public function get_mail_message_params()
@@ -1054,7 +1062,7 @@ namespace
         /**
          * @var bool
          */
-        protected $flag_details = false;
+        public $flag_details = false;
 
         /**
          * @var \Exception[]
@@ -1066,7 +1074,7 @@ namespace
         /**
          * @param \Exception $e
          */
-        public function add(\Exception $e)
+        public function add($e)
             {
             $this->stack[] = $e;
             }
@@ -1083,7 +1091,7 @@ namespace
         /**
          * @return \Exception[]
          */
-        final protected function get_attachments()
+        final public function get_attachments()
             {
             return $this->stack;
             }
@@ -1102,7 +1110,7 @@ namespace
          * @param string $level
          * @return string
          */
-        protected function get_mail_message_attachments($level = NULL)
+        public function get_mail_message_attachments($level = NULL)
             {
 
             $count = 0;
@@ -1209,7 +1217,7 @@ namespace
         /**
          * @var bool
          */
-        protected $flag_details = false;
+        public $flag_details = false;
 
 
         }
@@ -1238,7 +1246,7 @@ namespace
         /**
          * @var bool
          */
-        protected $flag_details = true;
+        public $flag_details = true;
 
         // SUCCESSREPORT METHODS
 
@@ -1251,6 +1259,7 @@ namespace
             }
 
         /**
+         * @param NULL | int $level
          * @return string
          */
         public function get_mail_message_attachments($level = NULL)
@@ -1323,7 +1332,7 @@ namespace
         /**
          * @var bool
          */
-        protected $flag_details = false;
+        public $flag_details = false;
 
         }
 
@@ -1390,7 +1399,7 @@ namespace
          * @param null $line
          * @param \Exception $previous
          */
-        public function __construct($message, $code=NULL, $severity=NULL, $file=NULL, $line=NULL, \Exception $previous=NULL)
+        public function __construct($message, $code=NULL, $severity=NULL, $file=NULL, $line=NULL, $previous=NULL)
             {
 
             parent::__construct($message, $code, $severity, $file, $line, $previous);
