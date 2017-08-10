@@ -1,6 +1,6 @@
 {
   "name": "autoflow/securephp",
-  "description": "PHP error mailer and replacement for error-, exception- and shutdown-handler",
+  "description": "PHP error mailer and reporting library",
   "require": {
     "php": "^5.3.3"
   },
@@ -8,10 +8,7 @@
     "error",
     "mailer",
     "log",
-    "error",
-    "exception",
-    "shutdown",
-    "handler"
+    "report"
   ],
   "homepage": "https://github.com/Autoflow/SecurePHP",
   "type": "library",
