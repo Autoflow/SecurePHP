@@ -1,4 +1,4 @@
-## SecurePHP - error mailer and runtime sensitizing
+## SecurePHP - error mailer and reporting library
 
 ### Provides:
 
