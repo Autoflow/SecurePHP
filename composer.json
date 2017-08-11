@@ -8,7 +8,7 @@
     "error",
     "mailer",
     "log",
-    "secure"
+    "report"
   ],
   "homepage": "https://github.com/Autoflow/SecurePHP",
   "type": "library",
