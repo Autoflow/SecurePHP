@@ -1,21 +1,13 @@
 <?php
 
-// Version 2.0, 24.10.2016
-# @todo: vielleicht Klasse "Ticket" als Basis für ErrorTicket und SuccessTicket
-# 1) ErrorTicket::description geändert zu ErrorTicket::status
-# 2) ErrorTicket::error geändert zu ErrorTicket::description
-# 3) added static class ErrorInfo{}
-# 4) ErrorTicket::description entfernt, wird von ErrorTicket::note abgelöst
-
-// Version 1.0
-# 1) Initial release, no info
-
-
 /**
  * @package SECUREPHP
  * @author Alexander Münch
  * @copyright Alexander Münch
  * @version 2.0
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace
@@ -35,7 +27,7 @@ namespace
      * @inherit Exception
      */
 
-    trait RAISEABLE
+    trait RAISABLE_TRAIT
 
 		{
 
@@ -81,12 +73,6 @@ namespace
 		protected $timeout                 = NULL;
 
         /**
-         * Email-Empfänger.
-         * @var string
-         */
-        protected $send_to              = "admin>user,log";
-
-        /**
          * Nachricht wurde gesendet.
          * @var bool
          */
@@ -125,17 +111,11 @@ namespace
                 }
             elseif(false == defined('SECUREPHP'))
                 {
-                throw new SECUREPHP\E_CONFIG('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' steht nicht zur Verfügung um diesen Fehlerbericht zu versenden.', NULL, $this);
+                throw new Exception('sending report failed due to missing installation. report library is not available', false, $this);
                 }
             elseif(false == SECUREPHP\BOOTSTRAP::getInstance())
                 {
-                throw new SECUREPHP\E_INIT('Fehler beim Versenden des angefügten Berichts. ' . SECUREPHP . ' ist nicht initialisiert.', NULL, $this);
-                }
-            elseif(true == SECUREPHP\PROTECT::getInstance()->in_progress())
-                {
-                // @todo U.u. diese Recursion erlauben um Berichte innerhalb eines
-                // Berichtes freizugeben. Vorher prüfen auf Richtigkeit, z.B. E_FATAL
-                throw new SECUREPHP\E_FATAL('Internal ' . SECUREPHP . ' error', NULL, $this);
+                throw new Exception('sending report failed due to missing initialisation. could not initialise report library', NULL, $this);
                 }
             else
                 {
@@ -148,9 +128,10 @@ namespace
             }
 
         /**
+         * @param \Exception | \RAISABLE_TRAIT | \BatchReport $e
          * @return string
          */
-        final public function toString(\Exception $e)
+        final public function toString($e)
             {
 
             $message = '';
@@ -164,7 +145,7 @@ namespace
                     ("* %s %s %s, %s %s" . SECUREPHP_LINE_BREAK,
                     SECUREPHP\CONFIG::getInstance()->_($e->description),
                     SECUREPHP\CONFIG::getInstance()->_('within'),
-                    $e->getFile(),
+                    ('test' == SECUREPHP\CONFIG::getInstance()->locale() ? basename($e->getFile()) : $e->getFile()),
                     SECUREPHP\CONFIG::getInstance()->_('line'),
                     $e->getLine()
                     );
@@ -325,8 +306,15 @@ namespace
          */
         final public function details($flag = NULL)
             {
-            if(NULL === $flag) return (bool) $this->flag_details;
-            else $this->flag_details = (bool) $flag;
+            if(NULL === $flag)
+                {
+                return (bool) $this->flag_details;
+                }
+            else
+                {
+                $this->flag_details = (bool) $flag;
+                return true;
+                }
             }
 
         /**
@@ -402,6 +390,7 @@ namespace
             }
 
         /**
+         * @param array[]
          * @return bool
          */
         final public function add_params(ARRAY $params)
@@ -519,11 +508,11 @@ namespace
             }
 
         /**
-         * @param \Exception $e
+         * @param \Exception | \Raisable | \RaisableError | \BatchReport $e
          * @param string|null $level
          * @return string
          */
-        final public function get_mail_message_previous(\Exception $e, $level = NULL)
+        final public function get_mail_message_previous($e, $level = NULL)
             {
 
             $level = ($level ? chr(ord($level) + 1) : 'A');
@@ -580,7 +569,6 @@ namespace
             }
 
         /**
-         * @param $e \Exception
          * @return string
          */
         final public function get_mail_message_params()
@@ -605,16 +593,18 @@ namespace
          */
         final protected function get_mail_message_receipients()
             {
+
             $users = explode(',', $this->send_to);
             foreach($users AS $user)
                 {
                 $user = trim($user);
-                if('all' == $user AND "all" == $this->send_to) {
-                $_admins = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_admin();
-                $_users = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_user();
-                foreach(AUTOFLOW\SECUREPHP\MAIL::getInstance()->userlist AS $_user => $email) $_recipients[] = $_user . ' [' .$email. ']';
-                break;
-                }
+                if('all' == $user AND "all" == $this->send_to)
+                    {
+                    $_admins = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_admin();
+                    $_users = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_user();
+                    foreach(AUTOFLOW\SECUREPHP\MAIL::getInstance()->userlist AS $_user => $email) $_recipients[] = $_user . ' [' .$email. ']';
+                    break;
+                    }
                 elseif(strpos($user, '>'))
                     {
                     $_list = explode('>', $user);
@@ -632,7 +622,7 @@ namespace
                             break;
                             }
                         elseif('log' == $name);
-                        elseif($_email = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_user_email($name))
+                        elseif($_email = AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_cc_mail($name))
                             {
                             $_recipients[] = $name . ' ['.$_email.']';
                             break;
@@ -652,7 +642,7 @@ namespace
                     elseif('log' == $user);
                     else
                         {
-                        $_recipients[] = $user . ' [' .AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_user_email($user) .']';
+                        $_recipients[] = $user . ' [' .AUTOFLOW\SECUREPHP\MAIL::getInstance()->get_cc_mail($user) .']';
                         }
                     }
                 }
@@ -687,7 +677,7 @@ namespace
 
         // E_RAISEABLE HEAD
 
-        use \RAISEABLE;
+        use \RAISABLE_TRAIT;
 
         }
 
@@ -699,7 +689,7 @@ namespace
 
         // E_RAISEABLE_ERROR HEAD
 
-        use \RAISEABLE;
+        use \RAISABLE_TRAIT;
         }
 
     /**
@@ -729,6 +719,12 @@ namespace
         public $description    = 'error ticket';
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
          * @var bool
          */
         protected $flag_details = true;
@@ -751,6 +747,31 @@ namespace
         }
 
     /**
+     * Class UserTicket
+     * @inherit \ErrorTicket
+     */
+    class UserTicket extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description    = 'user info';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = false;
+
+        }
+
+    /**
      * Class SuccessTicket
      * @inherit \ErrorTicket
      */
@@ -762,6 +783,12 @@ namespace
          * @var string
          */
         public $description = 'confirmation ticket';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user";
 
         /**
          * @var bool
@@ -792,6 +819,233 @@ namespace
             }
         }
 
+    /**
+     * Class Warning.
+     * @inherit \ErrorTicket
+     */
+    final class Warning extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'warning';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        }
+
+    /**
+     * Class Notice.
+     * @inherit \ErrorTicket
+     */
+    final class Notice extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'notice';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        }
+
+
+    /**
+     * Class ConfigError
+     * @inherit \ErrorTicket
+     */
+	final class ConfigError extends \ErrorTicket
+		{
+
+        // CONFIGERROR HEAD
+
+        /**
+         * @var string
+         */
+		public $description    = 'config error';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        /**
+         * @var string
+         */
+		public $config_file;
+
+        /**
+         * @var array[]
+         */
+		public $config_params;
+
+        // CONFIGERROR METHODS
+
+        /**
+         * @param string|null $notice
+         * @return string
+         */
+        final public function get_mail_message($notice=NULL)
+            {
+
+            $message = '';
+            $message .= 'Hinweise zur Konfiguration' . SECUREPHP_MAIL_EOL;
+            $message .= 'Möglicherweise sind die Verbindungsparameter nicht aktuell.' . SECUREPHP_MAIL_EOL;
+            $message .= 'Hinweise zur manuellen Änderung finden sie im Folgenden:' . SECUREPHP_MAIL_EOL;
+            $message .= 'Konfigurationsdatei: ' . ($this->config_file?:'Wert nicht angegeben') . SECUREPHP_MAIL_EOL;
+            $message .= 'aktuelle Konfigurationsparameter: ';
+            if( count($this->config_params) > 0 )
+                {
+                $count = 1;
+                $message .= SECUREPHP_MAIL_EOL;
+                foreach($this->config_params AS $name => $value)
+                    {
+                    $message .= $count .') '.$name .': '.(string) $value . SECUREPHP_MAIL_EOL;
+                    $count++;
+                    }
+                }
+            else
+                {
+                $message .= 'nicht vorhanden' . SECUREPHP_MAIL_EOL;
+                }
+            return parent::get_mail_message($message);
+            }
+
+        // GETTERS & SETTERS
+
+        /**
+         * @param string $file
+         * @return bool
+         */
+        public function set_config_file($file)
+			{
+			$this->config_file = $file;
+            return true;
+			}
+
+		}
+
+
+
+    /**
+     * Class InitError.
+     *
+     * Verbindungsfehler etc.
+     * Definiert allgemeine Fehler, die in der
+     * Prüfschleife, vor der Verarbeitungsschleife,
+     * auftreten.
+     *
+     * @inherit \ErrorTicket
+     */
+	final class InitError extends \ErrorTicket
+
+		{
+
+        /**
+         * @var string
+         */
+		public $description = 'init error';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin>user,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+		}
+
+    /**
+     * Class TransitionError.
+     *
+     * Fehler bei Übergängen.
+     * Z.B. Verzeichniswechsel oder Statusübergänge.
+     * Auch Updatefehler bei Datenbanken.
+     *
+     * @inherit \ErrorTicket
+     */
+    final class TransitionError extends \ErrorTicket
+
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'transition error';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user>admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        }
+
+    /**
+     * Class TransactionError.
+     * @inherit \ErrorTicket
+     */
+    final class TransactionError extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'transaction error';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user>admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = true;
+
+        }
+
+
+    /**
+     * Class BatchReport
+     * @inherit \ErrorTicket
+     */
     class BatchReport extends \ErrorTicket
         {
         /**
@@ -800,9 +1054,15 @@ namespace
         public $description = 'batch report';
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin>user";
+
+        /**
          * @var bool
          */
-        protected $flag_details = false;
+        public $flag_details = false;
 
         /**
          * @var \Exception[]
@@ -814,7 +1074,7 @@ namespace
         /**
          * @param \Exception $e
          */
-        public function add(\Exception $e)
+        public function add($e)
             {
             $this->stack[] = $e;
             }
@@ -831,7 +1091,7 @@ namespace
         /**
          * @return \Exception[]
          */
-        final protected function get_attachments()
+        final public function get_attachments()
             {
             return $this->stack;
             }
@@ -850,7 +1110,7 @@ namespace
          * @param string $level
          * @return string
          */
-        protected function get_mail_message_attachments($level = NULL)
+        public function get_mail_message_attachments($level = NULL)
             {
 
             $count = 0;
@@ -949,9 +1209,15 @@ namespace
         public $description = "error report";
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user";
+
+        /**
          * @var bool
          */
-        protected $flag_details = false;
+        public $flag_details = false;
 
 
         }
@@ -972,9 +1238,15 @@ namespace
         public $description = "working range";
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "user";
+
+        /**
          * @var bool
          */
-        protected $flag_details = true;
+        public $flag_details = true;
 
         // SUCCESSREPORT METHODS
 
@@ -987,6 +1259,7 @@ namespace
             }
 
         /**
+         * @param NULL | int $level
          * @return string
          */
         public function get_mail_message_attachments($level = NULL)
@@ -1038,237 +1311,31 @@ namespace
             }
         }
 
-
-
-    /**
-     * Class Notice.
-     * @inherit \ErrorTicket
-     */
-    final class Notice extends \ErrorTicket
-        {
-
-        /**
-         * @var string
-         */
-        public $description = 'notice';
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        /**
-         * @return string
-         */
-        final public function get_mail_header()
-            {
-            return SECUREPHP . $this->getMessage();
-            }
-        }
-
-    /**
-     * Class ConfigError
-     * @inherit \ErrorTicket
-     */
-	final class ConfigError extends \ErrorTicket
-		{
-
-        // CONFIGERROR HEAD
-
-        /**
-         * @var string
-         */
-		public $description    = 'config error';
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        /**
-         * @var string
-         */
-		public $config_file;
-
-        /**
-         * @var array[]
-         */
-		public $config_params;
-
-        // CONFIGERROR METHODS
-
-        /**
-         * @param string|null $notice
-         * @return string
-         */
-        final public function get_mail_message($notice=NULL)
-            {
-
-            $message = '';
-            $message .= 'Hinweise zur Konfiguration' . SECUREPHP_MAIL_EOL;
-            $message .= 'Möglicherweise sind die Verbindungsparameter nicht aktuell.' . SECUREPHP_MAIL_EOL;
-            $message .= 'Hinweise zur manuellen Änderung finden sie im Folgenden:' . SECUREPHP_MAIL_EOL;
-            $message .= 'Konfigurationsdatei: ' . ($this->config_file?:'Wert nicht angegeben') . SECUREPHP_MAIL_EOL;
-            $message .= 'aktuelle Konfigurationsparameter: ';
-            if( count($this->config_params) > 0 )
-                {
-                $count = 1;
-                $message .= SECUREPHP_MAIL_EOL;
-                foreach($this->config_params AS $name => $value)
-                    {
-                    $message .= $count .') '.$name .': '.(string) $value . SECUREPHP_MAIL_EOL;
-                    $count++;
-                    }
-                }
-            else
-                {
-                $message .= 'nicht vorhanden' . SECUREPHP_MAIL_EOL;
-                }
-            return parent::get_mail_message($message);
-            }
-
-        // GETTERS & SETTERS
-
-        /**
-         * @param string $file
-         * @return bool
-         */
-        public function set_config_file($file)
-			{
-			$this->config_file = $file;
-            return true;
-			}
-
-		}
-
-
-
-    /**
-     * Class InitError.
-     *
-     * Verbindungsfehler etc.
-     * Definiert allgemeine Fehler, die in der
-     * Prüfschleife, vor der Verarbeitungsschleife,
-     * auftreten.
-     *
-     * @inherit \ErrorTicket
-     */
-	final class InitError extends \ErrorTicket
-
-		{
-
-        /**
-         * @var string
-         */
-		public $description = 'init error';
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-		}
-
-    /**
-     * Class TransitionError.
-     *
-     * Fehler bei Übergängen.
-     * Z.B. Verzeichniswechsel oder Statusübergänge.
-     * Auch Updatefehler bei Datenbanken.
-     *
-     * @inherit \ErrorTicket
-     */
-    final class TransitionError extends \ErrorTicket
-
-        {
-
-        /**
-         * @var string
-         */
-        public $description = 'transition error';
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        }
-
-    /**
-     * Class TransactionError.
-     * @inherit \ErrorTicket
-     */
-    final class TransactionError extends \ErrorTicket
-        {
-
-        /**
-         * @var string
-         */
-        public $description = 'transaction error';
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-        }
-
-    /**
-     * @todo zu allgemein, spezifizieren
-     * Class ClassError
-     * @inherit \ErrorTicket
-     */
-	final class ClassError extends \ErrorTicket
-
-		{
-
-        /**
-         * @var string
-         */
-		public $description = 'class error';
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = true;
-
-		}
-
     /**
      * Class TimerAlert
      * @inherit \ErrorReport
      */
-	final class Reminder extends \ErrorReport
-		{
-
-        /**
-         * @var string
-         */
-		public $description = 'reminder alert';
-
-        /**
-         * @var bool
-         */
-        protected $flag_details = false;
-		}
-
-    /**
-     * Class UncaughtException
-     * @inherit \ErrorTicket
-     */
-    final class UncaughtException extends \ErrorTicket
+    final class Reminder extends \BatchReport
         {
 
         /**
          * @var string
          */
-        public $description = 'uncaught exception';
+        public $description = 'reminder alert';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin>user,log";
 
         /**
          * @var bool
          */
-        protected $flag_details = false;
+        public $flag_details = false;
+
         }
+
 
     /**
      * Class Eof
@@ -1283,9 +1350,16 @@ namespace
         public $description = "eof error";
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
          * @var bool
          */
         public $flag_details = false;
+
         }
 
     /**
@@ -1302,7 +1376,13 @@ namespace
         /**
          * @var string
          */
-        public $description = "runtime error";
+        public $description = "PHP runtime error";
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
 
         /**
          * @var bool
@@ -1319,16 +1399,92 @@ namespace
          * @param null $line
          * @param \Exception $previous
          */
-        public function __construct($message, $code=NULL, $severity=NULL, $file=NULL, $line=NULL, \Exception $previous=NULL)
+        public function __construct($message, $code=NULL, $severity=NULL, $file=NULL, $line=NULL, $previous=NULL)
             {
 
             parent::__construct($message, $code, $severity, $file, $line, $previous);
-            #if(class_exists("\SECUREPHP\PROTECT", false))
-            #    {
-                 #$this->application = \SECUREPHP\PROTECT::getInstance()->get_app();
-            #    }
+
+
             }
 		}
+
+    /**
+     * Class PhpWarning
+     * @inherit Error
+     */
+    class PhpWarning extends \PhpError
+
+        {
+
+        /**
+         * @var string
+         */
+        public $description = "php warning";
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        public $flag_details = false;
+
+        }
+
+
+    /**
+     * Class PhpNotice
+     * @inherit Error
+     */
+    class PhpNotice extends \PhpError
+
+        {
+
+        /**
+         * @var string
+         */
+        public $description = "php notice";
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        public $flag_details = false;
+
+        }
+
+    /**
+     * Class UncaughtException
+     * @inherit \ErrorTicket
+     */
+    final class UncaughtException extends \ErrorTicket
+        {
+
+        /**
+         * @var string
+         */
+        public $description = 'uncaught exception';
+
+        /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
+         * @var bool
+         */
+        protected $flag_details = false;
+
+        }
 
     /**
      * Class ShutdownError
@@ -1344,12 +1500,16 @@ namespace
 		public $description = "shutdown error";
 
         /**
+         * Report-Empfänger.
+         * @var string
+         */
+        protected $send_to     = "admin,log";
+
+        /**
          * @var bool
          */
         public $flag_details = true;
 
 		}
-
-
 
 	}

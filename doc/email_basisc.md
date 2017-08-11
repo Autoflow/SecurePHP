@@ -15,13 +15,14 @@ try {
     $mysecure->config->from('Autoflow <securephp@autoflow.org>');
 
     // set your systems administrators adress
-    $mysecure->config->admin('admin@yourdomain');
+    $mysecure->config->admins('admin@yourdomain');
 
     // set your users adress
-    $mysecure->config->user('user@yourdomain');
+    $mysecure->config->users('user@yourdomain');
 
     // set further receipients
-    $mysecure->config->add_cc('cc', 'cc@yourdomain');
+    $mysecure->config->cc('cc1', 'cc@yourdomain');
+    $mysecure->config->cc('cc2', 'cc@yourdomain');
 
     // now you are ready to create and send reports to email inboxes
     $ticket = new \ErrorTicket('Database error', 'database not available');
@@ -31,8 +32,7 @@ try {
     $ticket->send_to('admin>user,log');
     $ticket->raise();
 
-    // send some information to users additionally
-    // this report will not be logged
+    // send ticket to all cc's additionally
     $ticket = new \Notice('Database update failed today', 'Retry in 30 minutes');
     $ticket->send_to('cc');
     $ticket->raise();

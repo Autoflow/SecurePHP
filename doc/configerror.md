@@ -68,3 +68,11 @@ catch(PDOException $e)
 *
 */
 ```
+
+### Default receipients:
+* admin
+* log
+
+### Similiar reports:
+* [Warning](warning.md)
+* [InitError](initerror.md)

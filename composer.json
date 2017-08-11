@@ -1,6 +1,6 @@
 {
   "name": "autoflow/securephp",
-  "description": "PHP error mailer and reporting library",
+  "description": "SecurePHP - error mailer and reporting library ",
   "require": {
     "php": "^5.3.3"
   },

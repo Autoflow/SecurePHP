@@ -1,32 +1,14 @@
 <?php
 
-// Version 2.0, 24.10.2016
-# 1) Initial release, no info
-
 /**
- * Base package for SecurePHP reports and exceptions.
- *
- * Don't use this classed directly in code.
- *
- * \ErrorException
- *  -> \SECUREPHP\ERROR_EXCEPTION
- *     -> i.e. \SECUREPHP\PhpRunTimeError
- *
- * \Exceptions
- *  -> \SecurePHP\EXCEPTION
- *     -> \SecurePHP\E_FATAL
- *        -> \SecurePHP\E_ACCESS
- *        -> \SecurePHP\E_RECURSION
- *        -> \SecurePHP\E_INIT
- *        -> \SecurePHP\E_CONFLICT
- *     -> \SecurePHP\E_CONFIG
- *     -> ie. \SECUREPHP\ERRORTICKET
- *     -> ie. \SecurePHP\ERRORREPORT
  *
  * @package SECUREPHP
  * @author Alexander Münch
  * @copyright Alexander Münch
  * @version 1.1
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace AUTOFLOW\SECUREPHP
@@ -53,7 +35,7 @@ namespace AUTOFLOW\SECUREPHP
             if ($prev = $this->getPrevious()) do
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
-                $message .= "* Vorausgehend:" . SECUREPHP_LINE_BREAK;
+                $message .= "* ".CONFIG::getInstance()->_('previous').":" . SECUREPHP_LINE_BREAK;
                 $message .= '*' . SECUREPHP_LINE_BREAK;
                 $message .= '* '.get_class($prev) . SECUREPHP_LINE_BREAK;
                 $message .= $this->toString($prev);
@@ -70,7 +52,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception $e
          * @return string
          */
-        public function toString(\Exception $e)
+        public function toString($e)
             {
 
             $message = '';
@@ -79,14 +61,14 @@ namespace AUTOFLOW\SECUREPHP
                 ('* %s %s %s, %s %s ' . SECUREPHP_LINE_BREAK,
                     get_class($e),
                     CONFIG::getInstance()->_('within'),
-                    $e->getFile(),
+                    ('test' == CONFIG::getInstance()->locale() ? basename($e->getFile()) : $e->getFile()),
                     CONFIG::getInstance()->_('line'),
                     $e->getLine()
                 );
 
             $message .= '* ' . CONFIG::getInstance()->_('description') . ': ' . $e->getMessage() . SECUREPHP_LINE_BREAK;
 
-            if(\AUTOFLOW\SECUREPHP\BOOTSTRAP::getInstance()->debug())
+            if(BOOTSTRAP::getInstance()->debug())
                 {
                 $message .= '*' . SECUREPHP_LINE_BREAK;
                 $message .= '* ' . CONFIG::getInstance()->_('trace') . ': ' . SECUREPHP_LINE_BREAK;
@@ -100,7 +82,7 @@ namespace AUTOFLOW\SECUREPHP
          * @param \Exception $e
          * @return string
          */
-        final public function formatTrace(\Exception $e)
+        final public function formatTrace($e)
             {
 
             $message = '';
