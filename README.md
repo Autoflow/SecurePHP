@@ -1,5 +1,7 @@
 ## SecurePHP - error mailer and reporting library
 
+(PHP5.4, PHP7)
+
 ### Provides:
 
 * [secure default mode](doc/default.md)
