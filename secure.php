@@ -340,6 +340,7 @@ namespace AUTOFLOW\SECUREPHP
                 // - traits ab 5.4
                 // - passing null to set_error_handler was added in PHP 5.5
                 // - PHP 5.4.0, the CLI SAPI provides a built-in web server
+                // - PHP 5.4 array() as []
                 $this->init_error(new E_INIT('PHP-Version wird nicht unterstützt'));
                 }
             elseif (false === $this->set_logfile($logfile))
