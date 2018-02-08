@@ -2,7 +2,7 @@
 
 ### Provides:
 
-* [secure default mode](doc/default.md)
+* [secure runtime mode](doc/default.md)
 
 * predefined reports based on exceptions
     - [error tickets](doc/errorticket.md)
