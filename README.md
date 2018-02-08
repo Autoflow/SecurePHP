@@ -1,4 +1,4 @@
-## SecurePHP - error mailer and reporting library
+## SecurePHP - exception mailer and reporting library
 
 (PHP5.4, PHP7)
 
